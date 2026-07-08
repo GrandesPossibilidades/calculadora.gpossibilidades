@@ -13,6 +13,7 @@ let uid = 1;
 const novoItem = (comissaoPct, impostoPct) => ({
   id: uid++,
   nome: "",
+  fornecedor: "",
   custoUnit: 0,
   quantidade: 1,
   frete: 0,
@@ -140,6 +141,7 @@ export default function OrcamentoForm({ inicial }) {
       return {
         orcamento_id: orcamentoId,
         nome: it.nome || "(item)",
+        fornecedor: it.fornecedor || null,
         custo_unit: it.custoUnit,
         quantidade: it.quantidade,
         frete: it.frete,
@@ -300,6 +302,7 @@ export default function OrcamentoForm({ inicial }) {
             <thead>
               <tr className="bg-azul text-white text-[11px] uppercase">
                 <th className="text-left px-2 py-2 rounded-l-md">Item</th>
+                <th className="px-1.5 py-2">Fornecedor</th>
                 <th className="px-1.5 py-2">Qtd</th>
                 <th className="px-1.5 py-2">Custo unit. compra</th>
                 <th className="px-1.5 py-2">Frete</th>

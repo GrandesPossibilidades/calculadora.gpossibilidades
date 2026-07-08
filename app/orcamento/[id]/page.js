@@ -5,6 +5,7 @@ import OrcamentoForm from "@/components/OrcamentoForm";
 function mapItem(row) {
   return {
     nome: row.nome,
+    fornecedor: row.fornecedor || "",
     custoUnit: Number(row.custo_unit),
     quantidade: Number(row.quantidade),
     frete: Number(row.frete),

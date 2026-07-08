@@ -1,13 +1,32 @@
+import { useState } from "react";
 import { computeItem, margemCor, COMISSAO_MINIMA } from "@/lib/calc";
 import { formatMoney, formatPct } from "@/lib/format";
+import { FORNECEDORES } from "@/lib/fornecedores";
+
+const OUTROS = "__outros__";
 
 export default function ItemRow({ item, onChange, onRemove }) {
   const r = computeItem(item);
   const cor = margemCor(r.margemPct);
   const comissaoBaixa = r.comissaoValor < COMISSAO_MINIMA;
 
+  const [outrosAtivo, setOutrosAtivo] = useState(
+    Boolean(item.fornecedor) && !FORNECEDORES.includes(item.fornecedor)
+  );
+
   function set(field, value) {
-    onChange({ ...item, [field]: field === "nome" ? value : parseFloat(value) || 0 });
+    const isTexto = field === "nome" || field === "fornecedor";
+    onChange({ ...item, [field]: isTexto ? value : parseFloat(value) || 0 });
+  }
+
+  function selecionarFornecedor(valor) {
+    if (valor === OUTROS) {
+      setOutrosAtivo(true);
+      set("fornecedor", "");
+    } else {
+      setOutrosAtivo(false);
+      set("fornecedor", valor);
+    }
   }
 
   return (
@@ -20,6 +39,30 @@ export default function ItemRow({ item, onChange, onRemove }) {
           onChange={(e) => set("nome", e.target.value)}
           className="w-full min-w-[140px] border border-slate-300 rounded-md px-2 py-1.5 font-semibold focus:outline-none focus:border-azul"
         />
+      </td>
+      <td className="px-1.5 py-1.5 min-w-[130px]">
+        <select
+          value={outrosAtivo ? OUTROS : item.fornecedor || ""}
+          onChange={(e) => selecionarFornecedor(e.target.value)}
+          className="w-full border border-slate-300 rounded-md px-1.5 py-1.5 font-semibold focus:outline-none focus:border-azul"
+        >
+          <option value="">Selecionar...</option>
+          {FORNECEDORES.map((f) => (
+            <option key={f} value={f}>
+              {f}
+            </option>
+          ))}
+          <option value={OUTROS}>Outros...</option>
+        </select>
+        {outrosAtivo && (
+          <input
+            type="text"
+            value={item.fornecedor}
+            placeholder="Nome do fornecedor"
+            onChange={(e) => set("fornecedor", e.target.value)}
+            className="mt-1 w-full border border-slate-300 rounded-md px-1.5 py-1 text-xs font-semibold focus:outline-none focus:border-azul"
+          />
+        )}
       </td>
       <td className="px-1.5 py-1.5">
         <input
