@@ -6,6 +6,7 @@ function mapItem(row) {
   return {
     nome: row.nome,
     fornecedor: row.fornecedor || "",
+    referencia: row.referencia || "",
     custoUnit: Number(row.custo_unit),
     quantidade: Number(row.quantidade),
     frete: Number(row.frete),

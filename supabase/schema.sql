@@ -22,6 +22,7 @@ create table if not exists public.orcamento_itens (
   orcamento_id uuid not null references public.orcamentos (id) on delete cascade,
   nome text,
   fornecedor text,
+  referencia text,
   custo_unit numeric not null default 0,
   quantidade numeric not null default 1,
   frete numeric not null default 0,

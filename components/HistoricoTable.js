@@ -67,6 +67,7 @@ export default function HistoricoTable({ orcamentos, erro }) {
     return (data || []).map((row) => ({
       nome: row.nome,
       fornecedor: row.fornecedor || "",
+      referencia: row.referencia || "",
       custoUnit: Number(row.custo_unit),
       quantidade: Number(row.quantidade),
       frete: Number(row.frete),
@@ -149,6 +150,7 @@ export default function HistoricoTable({ orcamentos, erro }) {
           orcamento_id: novo.id,
           nome: it.nome,
           fornecedor: it.fornecedor || null,
+          referencia: it.referencia || null,
           custo_unit: it.custoUnit,
           quantidade: it.quantidade,
           frete: it.frete,
