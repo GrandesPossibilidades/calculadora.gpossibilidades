@@ -59,3 +59,12 @@ create policy "orcamento_itens_update_auth" on public.orcamento_itens for update
 
 drop policy if exists "orcamento_itens_delete_auth" on public.orcamento_itens;
 create policy "orcamento_itens_delete_auth" on public.orcamento_itens for delete to authenticated using (true);
+
+-- Rode o bloco abaixo SOMENTE DEPOIS de criar os 2 usuários em
+-- Authentication > Users > Add user (email + senha). Isso grava o nome de cada um
+-- em user_metadata, usado pelo app para preencher "criado_por" corretamente.
+update auth.users set raw_user_meta_data = raw_user_meta_data || '{"name": "Gabriel"}'::jsonb
+  where email = 'gp@gpossibilidades.com.br';
+
+update auth.users set raw_user_meta_data = raw_user_meta_data || '{"name": "Beatriz"}'::jsonb
+  where email = 'beatriz@gpossibilidades.com.br';
