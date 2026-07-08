@@ -24,19 +24,19 @@ export default function ItemRow({ item, onChange, onRemove }) {
       <td className="px-1.5 py-1.5">
         <input
           type="number"
-          step="0.5"
-          value={item.custoUnit}
-          onChange={(e) => set("custoUnit", e.target.value)}
-          className="w-20 text-center border border-slate-300 rounded-md px-1.5 py-1.5 font-semibold focus:outline-none focus:border-azul"
+          step="1"
+          value={item.quantidade}
+          onChange={(e) => set("quantidade", e.target.value)}
+          className="w-16 text-center border border-slate-300 rounded-md px-1.5 py-1.5 font-semibold focus:outline-none focus:border-azul"
         />
       </td>
       <td className="px-1.5 py-1.5">
         <input
           type="number"
-          step="1"
-          value={item.quantidade}
-          onChange={(e) => set("quantidade", e.target.value)}
-          className="w-16 text-center border border-slate-300 rounded-md px-1.5 py-1.5 font-semibold focus:outline-none focus:border-azul"
+          step="0.5"
+          value={item.custoUnit}
+          onChange={(e) => set("custoUnit", e.target.value)}
+          className="w-20 text-center border border-slate-300 rounded-md px-1.5 py-1.5 font-semibold focus:outline-none focus:border-azul"
         />
       </td>
       <td className="px-1.5 py-1.5">

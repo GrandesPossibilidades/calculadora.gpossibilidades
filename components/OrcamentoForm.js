@@ -300,8 +300,8 @@ export default function OrcamentoForm({ inicial }) {
             <thead>
               <tr className="bg-azul text-white text-[11px] uppercase">
                 <th className="text-left px-2 py-2 rounded-l-md">Item</th>
-                <th className="px-1.5 py-2">Custo unit.</th>
                 <th className="px-1.5 py-2">Qtd</th>
+                <th className="px-1.5 py-2">Custo unit. compra</th>
                 <th className="px-1.5 py-2">Frete</th>
                 <th className="px-1.5 py-2">Com. %</th>
                 <th className="px-1.5 py-2">Imp. %</th>

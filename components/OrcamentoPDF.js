@@ -1,6 +1,6 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
-import { computeItem, computeTotals, margemCor } from "@/lib/calc";
-import { formatMoney, formatPct } from "@/lib/format";
+import { computeItem, computeTotals } from "@/lib/calc";
+import { formatMoney } from "@/lib/format";
 
 const styles = StyleSheet.create({
   page: { padding: 28, fontSize: 9, fontFamily: "Helvetica", color: "#1B2A41" },
@@ -28,29 +28,36 @@ const styles = StyleSheet.create({
   th: {
     backgroundColor: "#1B3A6B",
     color: "#fff",
-    fontSize: 7.5,
+    fontSize: 8,
     textTransform: "uppercase",
-    padding: 4,
+    padding: 5,
     textAlign: "center",
   },
   td: {
-    fontSize: 8.5,
-    padding: 4,
+    fontSize: 9,
+    padding: 5,
     textAlign: "center",
     borderBottomWidth: 1,
     borderBottomColor: "#E8EDF3",
   },
-  colNome: { width: "26%", textAlign: "left" },
-  colNum: { width: "10.5%" },
-  totals: { flexDirection: "row", gap: 8, marginTop: 10 },
-  tbox: { flex: 1, borderRadius: 6, padding: 10, textAlign: "center" },
-  tCap: { fontSize: 7.5, textTransform: "uppercase", fontWeight: 700 },
-  tBig: { fontSize: 13, fontWeight: 700, marginTop: 2 },
+  colNome: { width: "46%", textAlign: "left" },
+  colNum: { width: "18%" },
+  totalBox: {
+    backgroundColor: "#1B3A6B",
+    borderRadius: 6,
+    padding: 14,
+    marginTop: 10,
+    alignItems: "flex-end",
+  },
+  totalCap: { color: "#fff", fontSize: 9, textTransform: "uppercase", fontWeight: 700, opacity: 0.9 },
+  totalBig: { color: "#fff", fontSize: 18, fontWeight: 700, marginTop: 2 },
 });
 
+// PDF para o cliente: mostra só nome do item, quantidade, preço unitário e total.
+// Custo, frete, comissão, imposto e margem são informação interna da GP e nunca
+// devem aparecer aqui.
 export default function OrcamentoPDF({ numero, cliente, observacao, empresa, itens, totals, criadoPor, data }) {
   const t = totals || computeTotals(itens);
-  const corMargem = margemCor(t.margemPct);
   const dataStr = (data ? new Date(data) : new Date()).toLocaleDateString("pt-BR");
 
   return (
@@ -81,10 +88,8 @@ export default function OrcamentoPDF({ numero, cliente, observacao, empresa, ite
           <View style={styles.row}>
             <Text style={[styles.th, styles.colNome]}>Item</Text>
             <Text style={[styles.th, styles.colNum]}>Qtd</Text>
-            <Text style={[styles.th, styles.colNum]}>Custo unit.</Text>
-            <Text style={[styles.th, styles.colNum]}>Frete</Text>
             <Text style={[styles.th, styles.colNum]}>Preço unit.</Text>
-            <Text style={[styles.th, styles.colNum]}>Total item</Text>
+            <Text style={[styles.th, styles.colNum]}>Total</Text>
           </View>
           {itens.map((it) => {
             const r = computeItem(it);
@@ -92,8 +97,6 @@ export default function OrcamentoPDF({ numero, cliente, observacao, empresa, ite
               <View style={styles.row} key={it.id}>
                 <Text style={[styles.td, styles.colNome]}>{it.nome || "(item)"}</Text>
                 <Text style={[styles.td, styles.colNum]}>{it.quantidade}</Text>
-                <Text style={[styles.td, styles.colNum]}>{formatMoney(it.custoUnit)}</Text>
-                <Text style={[styles.td, styles.colNum]}>{formatMoney(it.frete)}</Text>
                 <Text style={[styles.td, styles.colNum]}>{formatMoney(r.precoUnitario)}</Text>
                 <Text style={[styles.td, styles.colNum]}>{formatMoney(r.precoVendaTotal)}</Text>
               </View>
@@ -101,20 +104,9 @@ export default function OrcamentoPDF({ numero, cliente, observacao, empresa, ite
           })}
         </View>
 
-        <View style={styles.totals}>
-          <View style={[styles.tbox, { backgroundColor: "#F1F3F6" }]}>
-            <Text style={styles.tCap}>Custo total</Text>
-            <Text style={styles.tBig}>{formatMoney(t.custoTotal)}</Text>
-          </View>
-          <View style={[styles.tbox, { backgroundColor: "#E8F0FB" }]}>
-            <Text style={styles.tCap}>Preço total</Text>
-            <Text style={styles.tBig}>{formatMoney(t.precoTotal)}</Text>
-          </View>
-          <View style={[styles.tbox, { backgroundColor: corMargem, color: "#fff" }]}>
-            <Text style={[styles.tCap, { color: "#fff" }]}>Margem líquida</Text>
-            <Text style={[styles.tBig, { color: "#fff" }]}>{formatMoney(t.margemTotal)}</Text>
-            <Text style={{ color: "#fff", fontSize: 9, marginTop: 2 }}>{formatPct(t.margemPct)}</Text>
-          </View>
+        <View style={styles.totalBox}>
+          <Text style={styles.totalCap}>Total do orçamento</Text>
+          <Text style={styles.totalBig}>{formatMoney(t.precoTotal)}</Text>
         </View>
       </Page>
     </Document>
