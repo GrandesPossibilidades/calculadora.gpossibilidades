@@ -227,6 +227,7 @@ export default function OrcamentoForm({ inicial }) {
           <input
             type="number"
             value={numero}
+            onFocus={(e) => e.target.select()}
             onChange={(e) => setNumero(e.target.value)}
             placeholder="Nº (automático)"
             className="sm:w-36 border border-slate-300 rounded-lg px-3 py-2 font-semibold focus:outline-none focus:border-azul"
@@ -271,6 +272,7 @@ export default function OrcamentoForm({ inicial }) {
             <input
               type="number"
               value={defComissao}
+              onFocus={(e) => e.target.select()}
               onChange={(e) => setDefComissao(parseFloat(e.target.value) || 0)}
               className="w-16 border border-slate-300 rounded-md px-2 py-1 text-center font-semibold"
             />
@@ -281,6 +283,7 @@ export default function OrcamentoForm({ inicial }) {
             <input
               type="number"
               value={defImposto}
+              onFocus={(e) => e.target.select()}
               onChange={(e) => setDefImposto(parseFloat(e.target.value) || 0)}
               className="w-16 border border-slate-300 rounded-md px-2 py-1 text-center font-semibold"
             />
@@ -297,34 +300,15 @@ export default function OrcamentoForm({ inicial }) {
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-azul text-white text-[11px] uppercase">
-                <th className="text-left px-2 py-2 rounded-l-md">Item</th>
-                <th className="px-1.5 py-2">Fornecedor</th>
-                <th className="px-1.5 py-2">Qtd</th>
-                <th className="px-1.5 py-2">Custo unit. compra</th>
-                <th className="px-1.5 py-2">Frete</th>
-                <th className="px-1.5 py-2">Com. %</th>
-                <th className="px-1.5 py-2">Imp. %</th>
-                <th className="px-2 py-2">Preço unit.</th>
-                <th className="px-2 py-2">Total item</th>
-                <th className="px-2 py-2">Margem</th>
-                <th className="px-2 py-2 rounded-r-md" />
-              </tr>
-            </thead>
-            <tbody>
-              {itens.map((it) => (
-                <ItemRow
-                  key={it.id}
-                  item={it}
-                  onChange={(novo) => updateItem(it.id, novo)}
-                  onRemove={() => removeItem(it.id)}
-                />
-              ))}
-            </tbody>
-          </table>
+        <div className="flex flex-col gap-3">
+          {itens.map((it) => (
+            <ItemRow
+              key={it.id}
+              item={it}
+              onChange={(novo) => updateItem(it.id, novo)}
+              onRemove={() => removeItem(it.id)}
+            />
+          ))}
         </div>
 
         <button

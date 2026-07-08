@@ -1,8 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { margemCor } from "@/lib/calc";
+import { useRouter } from "next/navigation";
+import { margemCor, computeItem, computeTotals } from "@/lib/calc";
 import { formatMoney, formatPct } from "@/lib/format";
+import { createClient } from "@/lib/supabase/client";
+import { EMPRESAS } from "@/lib/empresas";
 
 function toCSV(orcamentos) {
   const linhas = ["Nº;Data;Cliente;Observação;Empresa;Custo;Preço Total;Margem R$;Margem %;Criado por"];
@@ -29,7 +32,13 @@ function toCSV(orcamentos) {
 }
 
 export default function HistoricoTable({ orcamentos, erro }) {
+  const supabase = createClient();
+  const router = useRouter();
+
   const [busca, setBusca] = useState("");
+  const [menuAberto, setMenuAberto] = useState(null);
+  const [linkCopiadoId, setLinkCopiadoId] = useState(null);
+  const [carregandoId, setCarregandoId] = useState(null);
 
   const filtrados = useMemo(() => {
     if (!busca.trim()) return orcamentos;
@@ -46,6 +55,117 @@ export default function HistoricoTable({ orcamentos, erro }) {
     a.download = "orcamentos_gp.csv";
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function buscarItens(orcamentoId) {
+    const { data } = await supabase
+      .from("orcamento_itens")
+      .select("*")
+      .eq("orcamento_id", orcamentoId)
+      .order("id", { ascending: true });
+
+    return (data || []).map((row) => ({
+      nome: row.nome,
+      fornecedor: row.fornecedor || "",
+      custoUnit: Number(row.custo_unit),
+      quantidade: Number(row.quantidade),
+      frete: Number(row.frete),
+      comissaoPct: Number(row.comissao_pct),
+      impostoPct: Number(row.imposto_pct),
+    }));
+  }
+
+  async function gerarPDF(o) {
+    setCarregandoId(o.id);
+    try {
+      const itens = await buscarItens(o.id);
+      const [{ pdf }, { default: OrcamentoPDF }] = await Promise.all([
+        import("@react-pdf/renderer"),
+        import("@/components/OrcamentoPDF"),
+      ]);
+      const totals = computeTotals(itens);
+
+      const blob = await pdf(
+        <OrcamentoPDF
+          numero={o.numero}
+          cliente={o.cliente}
+          observacao={o.observacao}
+          empresa={EMPRESAS[o.empresa] || EMPRESAS.GA}
+          itens={itens}
+          totals={totals}
+          criadoPor={o.criado_por}
+          data={o.criado_em}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `orcamento_${(o.cliente || "sem-nome").trim().replace(/\s+/g, "_")}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setCarregandoId(null);
+      setMenuAberto(null);
+    }
+  }
+
+  function copiarLink(o) {
+    const url = `${window.location.origin}/orcamento/${o.id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setLinkCopiadoId(o.id);
+      setTimeout(() => setLinkCopiadoId(null), 2000);
+    });
+  }
+
+  async function duplicar(o) {
+    setCarregandoId(o.id);
+    try {
+      const itens = await buscarItens(o.id);
+      const { data: userData } = await supabase.auth.getUser();
+      const criadoPor = userData.user?.user_metadata?.name || userData.user?.email || "Desconhecido";
+      const totals = computeTotals(itens);
+
+      const { data: novo, error } = await supabase
+        .from("orcamentos")
+        .insert({
+          cliente: o.cliente,
+          observacao: o.observacao,
+          empresa: o.empresa,
+          custo_total: totals.custoTotal,
+          preco_total: totals.precoTotal,
+          margem_total: totals.margemTotal,
+          margem_pct: totals.margemPct,
+          criado_por: criadoPor,
+        })
+        .select()
+        .single();
+
+      if (error || !novo) return;
+
+      const itensPayload = itens.map((it) => {
+        const r = computeItem(it);
+        return {
+          orcamento_id: novo.id,
+          nome: it.nome,
+          fornecedor: it.fornecedor || null,
+          custo_unit: it.custoUnit,
+          quantidade: it.quantidade,
+          frete: it.frete,
+          comissao_pct: it.comissaoPct,
+          imposto_pct: it.impostoPct,
+          preco_unit: r.precoUnitario,
+          total_item: r.precoVendaTotal,
+          margem_item: r.margem,
+        };
+      });
+
+      await supabase.from("orcamento_itens").insert(itensPayload);
+      router.push(`/orcamento/${novo.id}`);
+    } finally {
+      setCarregandoId(null);
+      setMenuAberto(null);
+    }
   }
 
   return (
@@ -78,33 +198,69 @@ export default function HistoricoTable({ orcamentos, erro }) {
         <div className="flex flex-col gap-2.5">
           {filtrados.map((o) => {
             const cor = margemCor(o.margem_pct);
+            const carregando = carregandoId === o.id;
             return (
-              <a
-                key={o.id}
-                href={`/orcamento/${o.id}`}
-                className="block border border-slate-200 rounded-xl p-3.5 hover:border-azul transition-colors"
-              >
-                <div className="flex justify-between items-baseline gap-2">
-                  <span className="font-bold text-azul">
-                    #{o.numero} — {o.cliente || "(sem nome)"}
-                  </span>
-                  <span className="text-xs text-slate-400 whitespace-nowrap">
-                    {new Date(o.criado_em).toLocaleDateString("pt-BR")} · {o.empresa} · {o.criado_por}
-                  </span>
+              <div key={o.id} className="relative">
+                <a
+                  href={`/orcamento/${o.id}`}
+                  className="block border border-slate-200 rounded-xl p-3.5 pr-10 hover:border-azul transition-colors"
+                >
+                  <div className="flex justify-between items-baseline gap-2 pr-2">
+                    <span className="font-bold text-azul">
+                      #{o.numero} — {o.cliente || "(sem nome)"}
+                    </span>
+                    <span className="text-xs text-slate-400 whitespace-nowrap">
+                      {new Date(o.criado_em).toLocaleDateString("pt-BR")} · {o.empresa} · {o.criado_por}
+                    </span>
+                  </div>
+                  {o.observacao && <div className="text-xs text-slate-500 mt-1">{o.observacao}</div>}
+                  <div className="flex flex-wrap gap-4 text-sm mt-2">
+                    <span>
+                      Custo: <b>{formatMoney(o.custo_total)}</b>
+                    </span>
+                    <span>
+                      Total: <b>{formatMoney(o.preco_total)}</b>
+                    </span>
+                    <span style={{ color: cor }}>
+                      Margem: <b>{formatMoney(o.margem_total)} ({formatPct(o.margem_pct)})</b>
+                    </span>
+                  </div>
+                </a>
+
+                <div className="absolute top-2 right-1 z-10">
+                  <button
+                    onClick={() => setMenuAberto(menuAberto === o.id ? null : o.id)}
+                    aria-label="Mais opções"
+                    className="text-slate-400 hover:text-azul text-xl font-bold leading-none px-2 py-1"
+                  >
+                    ⋮
+                  </button>
+                  {menuAberto === o.id && (
+                    <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg py-1 text-sm">
+                      <button
+                        onClick={() => gerarPDF(o)}
+                        disabled={carregando}
+                        className="w-full text-left px-3 py-2 hover:bg-slate-50 disabled:opacity-50"
+                      >
+                        {carregando ? "Gerando..." : "Gerar PDF"}
+                      </button>
+                      <button
+                        onClick={() => copiarLink(o)}
+                        className="w-full text-left px-3 py-2 hover:bg-slate-50"
+                      >
+                        {linkCopiadoId === o.id ? "Link copiado!" : "Copiar link"}
+                      </button>
+                      <button
+                        onClick={() => duplicar(o)}
+                        disabled={carregando}
+                        className="w-full text-left px-3 py-2 hover:bg-slate-50 disabled:opacity-50"
+                      >
+                        {carregando ? "Duplicando..." : "Duplicar orçamento"}
+                      </button>
+                    </div>
+                  )}
                 </div>
-                {o.observacao && <div className="text-xs text-slate-500 mt-1">{o.observacao}</div>}
-                <div className="flex flex-wrap gap-4 text-sm mt-2">
-                  <span>
-                    Custo: <b>{formatMoney(o.custo_total)}</b>
-                  </span>
-                  <span>
-                    Total: <b>{formatMoney(o.preco_total)}</b>
-                  </span>
-                  <span style={{ color: cor }}>
-                    Margem: <b>{formatMoney(o.margem_total)} ({formatPct(o.margem_pct)})</b>
-                  </span>
-                </div>
-              </a>
+              </div>
             );
           })}
         </div>
