@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { computeItem, computeTotals, COMISSAO_MINIMA } from "@/lib/calc";
 import { formatMoney } from "@/lib/format";
 import { EMPRESAS, EMPRESA_PADRAO } from "@/lib/empresas";
@@ -19,19 +20,27 @@ const novoItem = (comissaoPct, impostoPct) => ({
   impostoPct,
 });
 
-export default function OrcamentoForm() {
+export default function OrcamentoForm({ inicial }) {
   const supabase = createClient();
+  const router = useRouter();
+  const isEdit = Boolean(inicial?.id);
 
-  const [cliente, setCliente] = useState("");
-  const [observacao, setObservacao] = useState("");
-  const [empresa, setEmpresa] = useState(EMPRESA_PADRAO);
+  const [numero, setNumero] = useState(inicial?.numero ?? "");
+  const [cliente, setCliente] = useState(inicial?.cliente ?? "");
+  const [observacao, setObservacao] = useState(inicial?.observacao ?? "");
+  const [empresa, setEmpresa] = useState(inicial?.empresa ?? EMPRESA_PADRAO);
   const [defComissao, setDefComissao] = useState(20);
   const [defImposto, setDefImposto] = useState(15);
-  const [itens, setItens] = useState(() => [novoItem(20, 15), novoItem(20, 15)]);
+  const [itens, setItens] = useState(() =>
+    inicial?.itens?.length
+      ? inicial.itens.map((it) => ({ ...it, id: uid++ }))
+      : [novoItem(20, 15), novoItem(20, 15)]
+  );
 
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState(null);
-  const [salvo, setSalvo] = useState(null);
+  const [salvo, setSalvo] = useState(false);
+  const [linkCopiado, setLinkCopiado] = useState(false);
   const [gerandoPdf, setGerandoPdf] = useState(false);
 
   const totals = useMemo(() => computeTotals(itens), [itens]);
@@ -56,9 +65,16 @@ export default function OrcamentoForm() {
     setItens((prev) => prev.filter((it) => it.id !== id));
   }
 
+  function copiarLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setLinkCopiado(true);
+      setTimeout(() => setLinkCopiado(false), 2000);
+    });
+  }
+
   async function salvar() {
     setErro(null);
-    setSalvo(null);
+    setSalvo(false);
 
     if (!itens.length) {
       setErro("Adicione ao menos um item.");
@@ -70,31 +86,59 @@ export default function OrcamentoForm() {
     const { data: userData } = await supabase.auth.getUser();
     const criadoPor = userData.user?.user_metadata?.name || userData.user?.email || "Desconhecido";
 
-    const { data: orc, error: errOrc } = await supabase
-      .from("orcamentos")
-      .insert({
-        cliente: cliente.trim() || null,
-        observacao: observacao.trim() || null,
-        empresa,
-        custo_total: totals.custoTotal,
-        preco_total: totals.precoTotal,
-        margem_total: totals.margemTotal,
-        margem_pct: totals.margemPct,
-        criado_por: criadoPor,
-      })
-      .select()
-      .single();
+    const dadosOrcamento = {
+      cliente: cliente.trim() || null,
+      observacao: observacao.trim() || null,
+      empresa,
+      custo_total: totals.custoTotal,
+      preco_total: totals.precoTotal,
+      margem_total: totals.margemTotal,
+      margem_pct: totals.margemPct,
+    };
 
-    if (errOrc) {
-      setErro(errOrc.message);
-      setSalvando(false);
-      return;
+    const numeroInt = numero !== "" ? parseInt(numero, 10) : null;
+    if (numeroInt) dadosOrcamento.numero = numeroInt;
+
+    let orcamentoId = inicial?.id;
+
+    if (isEdit) {
+      const { error: errUpdate } = await supabase
+        .from("orcamentos")
+        .update(dadosOrcamento)
+        .eq("id", orcamentoId);
+
+      if (errUpdate) {
+        setErro(errUpdate.message);
+        setSalvando(false);
+        return;
+      }
+
+      const { error: errDel } = await supabase.from("orcamento_itens").delete().eq("orcamento_id", orcamentoId);
+      if (errDel) {
+        setErro(errDel.message);
+        setSalvando(false);
+        return;
+      }
+    } else {
+      const { data: orc, error: errOrc } = await supabase
+        .from("orcamentos")
+        .insert({ ...dadosOrcamento, criado_por: criadoPor })
+        .select()
+        .single();
+
+      if (errOrc) {
+        setErro(errOrc.message);
+        setSalvando(false);
+        return;
+      }
+
+      orcamentoId = orc.id;
     }
 
     const itensPayload = itens.map((it) => {
       const r = computeItem(it);
       return {
-        orcamento_id: orc.id,
+        orcamento_id: orcamentoId,
         nome: it.nome || "(item)",
         custo_unit: it.custoUnit,
         quantidade: it.quantidade,
@@ -116,7 +160,12 @@ export default function OrcamentoForm() {
       return;
     }
 
-    setSalvo(orc.id);
+    if (isEdit) {
+      setSalvo(true);
+      router.refresh();
+    } else {
+      router.push(`/orcamento/${orcamentoId}`);
+    }
   }
 
   async function gerarPDF() {
@@ -132,6 +181,7 @@ export default function OrcamentoForm() {
 
       const blob = await pdf(
         <OrcamentoPDF
+          numero={numero || null}
           cliente={cliente}
           observacao={observacao}
           empresa={EMPRESAS[empresa]}
@@ -155,11 +205,30 @@ export default function OrcamentoForm() {
 
   return (
     <div className="max-w-5xl mx-auto p-3 sm:p-4 flex flex-col gap-4">
+      {isEdit && (
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5">
+          <span className="text-sm font-bold text-azul">Orçamento nº {inicial.numero}</span>
+          <button
+            onClick={copiarLink}
+            className="text-xs font-bold border border-azul text-azul rounded-md px-3 py-1.5 hover:bg-white"
+          >
+            {linkCopiado ? "Link copiado!" : "Copiar link para compartilhar"}
+          </button>
+        </div>
+      )}
+
       <section className="bg-white rounded-2xl shadow-sm p-4">
         <h2 className="text-xs font-bold uppercase tracking-wide text-azul border-b-2 border-slate-100 pb-1.5 mb-3">
           Cliente e emitente
         </h2>
         <div className="flex flex-col sm:flex-row gap-3">
+          <input
+            type="number"
+            value={numero}
+            onChange={(e) => setNumero(e.target.value)}
+            placeholder="Nº (automático)"
+            className="sm:w-36 border border-slate-300 rounded-lg px-3 py-2 font-semibold focus:outline-none focus:border-azul"
+          />
           <input
             type="text"
             value={cliente}
@@ -171,7 +240,7 @@ export default function OrcamentoForm() {
             type="text"
             value={observacao}
             onChange={(e) => setObservacao(e.target.value)}
-            placeholder="Observação (ex: agendas + brindes)"
+            placeholder="Descrição / observação (ex: agendas + brindes)"
             className="flex-1 border border-slate-300 rounded-lg px-3 py-2 font-semibold focus:outline-none focus:border-azul"
           />
           <select
@@ -287,11 +356,7 @@ export default function OrcamentoForm() {
         </div>
 
         {erro && <p className="mt-3 text-sm font-semibold text-vermelho">{erro}</p>}
-        {salvo && (
-          <p className="mt-3 text-sm font-semibold text-verde">
-            Orçamento salvo! <a href={`/orcamento/${salvo}`} className="underline">Ver no histórico</a>
-          </p>
-        )}
+        {salvo && <p className="mt-3 text-sm font-semibold text-verde">Orçamento salvo!</p>}
 
         <div className="flex flex-col sm:flex-row gap-3 mt-4">
           <button

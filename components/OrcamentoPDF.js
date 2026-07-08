@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
   tBig: { fontSize: 13, fontWeight: 700, marginTop: 2 },
 });
 
-export default function OrcamentoPDF({ cliente, observacao, empresa, itens, totals, criadoPor, data }) {
+export default function OrcamentoPDF({ numero, cliente, observacao, empresa, itens, totals, criadoPor, data }) {
   const t = totals || computeTotals(itens);
   const corMargem = margemCor(t.margemPct);
   const dataStr = (data ? new Date(data) : new Date()).toLocaleDateString("pt-BR");
@@ -66,7 +66,9 @@ export default function OrcamentoPDF({ cliente, observacao, empresa, itens, tota
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Orçamento</Text>
+          <Text style={styles.sectionTitle}>
+            Orçamento{numero ? ` Nº ${numero}` : ""}
+          </Text>
           <Text>Cliente: {cliente || "-"}</Text>
           {observacao ? <Text style={{ marginTop: 2 }}>Observação: {observacao}</Text> : null}
           <Text style={{ marginTop: 2, fontSize: 8, color: "#64748B" }}>

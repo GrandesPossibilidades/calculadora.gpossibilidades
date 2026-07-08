@@ -1,8 +1,11 @@
 -- Rode este script no SQL Editor do Supabase (dashboard do projeto).
 -- Cria as tabelas do histórico compartilhado de orçamentos + RLS.
 
+create sequence if not exists public.orcamentos_numero_seq;
+
 create table if not exists public.orcamentos (
   id uuid primary key default gen_random_uuid(),
+  numero integer not null default nextval('public.orcamentos_numero_seq'),
   criado_em timestamptz not null default now(),
   cliente text,
   observacao text,

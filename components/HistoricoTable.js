@@ -5,11 +5,12 @@ import { margemCor } from "@/lib/calc";
 import { formatMoney, formatPct } from "@/lib/format";
 
 function toCSV(orcamentos) {
-  const linhas = ["Data;Cliente;Observação;Empresa;Custo;Preço Total;Margem R$;Margem %;Criado por"];
+  const linhas = ["Nº;Data;Cliente;Observação;Empresa;Custo;Preço Total;Margem R$;Margem %;Criado por"];
   orcamentos.forEach((o) => {
     const data = new Date(o.criado_em).toLocaleDateString("pt-BR");
     linhas.push(
       [
+        o.numero ?? "",
         data,
         o.cliente || "",
         o.observacao || "",
@@ -84,7 +85,9 @@ export default function HistoricoTable({ orcamentos, erro }) {
                 className="block border border-slate-200 rounded-xl p-3.5 hover:border-azul transition-colors"
               >
                 <div className="flex justify-between items-baseline gap-2">
-                  <span className="font-bold text-azul">{o.cliente || "(sem nome)"}</span>
+                  <span className="font-bold text-azul">
+                    #{o.numero} — {o.cliente || "(sem nome)"}
+                  </span>
                   <span className="text-xs text-slate-400 whitespace-nowrap">
                     {new Date(o.criado_em).toLocaleDateString("pt-BR")} · {o.empresa} · {o.criado_por}
                   </span>
