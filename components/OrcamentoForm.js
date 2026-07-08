@@ -303,21 +303,20 @@ export default function OrcamentoForm({ inicial }) {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs">
             <thead>
-              <tr className="bg-azul text-white text-[11px] uppercase">
-                <th className="text-left px-2 py-2 rounded-l-md">Item</th>
-                <th className="px-1.5 py-2">Fornecedor</th>
-                <th className="px-1.5 py-2">Referência</th>
-                <th className="px-1.5 py-2">Qtd</th>
-                <th className="px-1.5 py-2">Custo unit. compra</th>
-                <th className="px-1.5 py-2">Frete</th>
-                <th className="px-1.5 py-2">Com. %</th>
-                <th className="px-1.5 py-2">Imp. %</th>
-                <th className="px-2 py-2">Preço unit.</th>
-                <th className="px-2 py-2">Total item</th>
-                <th className="px-2 py-2">Margem</th>
-                <th className="px-2 py-2 rounded-r-md" />
+              <tr className="bg-azul text-white text-[10px] uppercase">
+                <th className="text-left px-1 py-1.5 rounded-l-md">Item</th>
+                <th className="px-1 py-1.5">Fornecedor</th>
+                <th className="px-1 py-1.5">Qtd</th>
+                <th className="px-1 py-1.5">Custo compra</th>
+                <th className="px-1 py-1.5">Frete</th>
+                <th className="px-1 py-1.5">Com. %</th>
+                <th className="px-1 py-1.5">Imp. %</th>
+                <th className="px-1.5 py-1.5">Preço unit.</th>
+                <th className="px-1.5 py-1.5">Total</th>
+                <th className="px-1.5 py-1.5">Margem</th>
+                <th className="px-1 py-1.5 rounded-r-md" />
               </tr>
             </thead>
             <tbody>
