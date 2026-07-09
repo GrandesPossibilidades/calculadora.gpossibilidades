@@ -24,6 +24,7 @@ create table if not exists public.orcamento_itens (
   fornecedor text,
   referencia text,
   referencias text[] not null default (array[])::text[],
+  ordem integer not null default 0,
   custo_unit numeric not null default 0,
   quantidade numeric not null default 1,
   frete numeric not null default 0,

@@ -27,7 +27,7 @@ export default async function OrcamentoPage({ params }) {
     .from("orcamento_itens")
     .select("*")
     .eq("orcamento_id", id)
-    .order("id", { ascending: true });
+    .order("ordem", { ascending: true });
 
   const inicial = {
     id: orcamento.id,

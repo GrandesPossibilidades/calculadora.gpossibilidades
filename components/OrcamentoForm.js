@@ -87,6 +87,17 @@ export default function OrcamentoForm({ inicial }) {
     setItens((prev) => prev.filter((it) => it.id !== id));
   }
 
+  function moverItem(id, direcao) {
+    setItens((prev) => {
+      const idx = prev.findIndex((it) => it.id === id);
+      const novoIdx = idx + direcao;
+      if (novoIdx < 0 || novoIdx >= prev.length) return prev;
+      const copia = [...prev];
+      [copia[idx], copia[novoIdx]] = [copia[novoIdx], copia[idx]];
+      return copia;
+    });
+  }
+
   function copiarLink() {
     navigator.clipboard.writeText(window.location.href).then(() => {
       setLinkCopiado(true);
@@ -157,13 +168,14 @@ export default function OrcamentoForm({ inicial }) {
       orcamentoId = orc.id;
     }
 
-    const itensPayload = itens.map((it) => {
+    const itensPayload = itens.map((it, index) => {
       const r = computeItem(it);
       return {
         orcamento_id: orcamentoId,
         nome: it.nome || "(item)",
         fornecedor: it.fornecedor || null,
         referencias: it.referencias || [],
+        ordem: index,
         custo_unit: it.custoUnit,
         quantidade: it.quantidade,
         frete: it.frete,
@@ -341,7 +353,7 @@ export default function OrcamentoForm({ inicial }) {
               </tr>
             </thead>
             <tbody>
-              {itens.map((it) => (
+              {itens.map((it, index) => (
                 <ItemRow
                   key={it.id}
                   item={it}
@@ -349,6 +361,8 @@ export default function OrcamentoForm({ inicial }) {
                   aoCadastrarFornecedor={aoCadastrarFornecedor}
                   onChange={(novo) => updateItem(it.id, novo)}
                   onRemove={() => removeItem(it.id)}
+                  onMoverCima={index > 0 ? () => moverItem(it.id, -1) : null}
+                  onMoverBaixo={index < itens.length - 1 ? () => moverItem(it.id, 1) : null}
                 />
               ))}
             </tbody>
@@ -398,7 +412,7 @@ export default function OrcamentoForm({ inicial }) {
             margem={totals.margemTotal}
             margemPct={totals.margemPct}
             titulo="Margem líquida (lucro real)"
-            descricao="= Preço total − material − frete − imposto"
+            descricao={`= ${formatMoney(totals.precoTotal)} − ${formatMoney(totals.custoTotal)} − ${formatMoney(totals.freteTotal)} − ${formatMoney(totals.impostoTotal)}`}
           />
         </div>
 

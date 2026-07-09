@@ -62,7 +62,7 @@ export default function HistoricoTable({ orcamentos, erro }) {
       .from("orcamento_itens")
       .select("*")
       .eq("orcamento_id", orcamentoId)
-      .order("id", { ascending: true });
+      .order("ordem", { ascending: true });
 
     return (data || []).map((row) => ({
       nome: row.nome,
@@ -145,13 +145,14 @@ export default function HistoricoTable({ orcamentos, erro }) {
 
       if (error || !novo) return;
 
-      const itensPayload = itens.map((it) => {
+      const itensPayload = itens.map((it, index) => {
         const r = computeItem(it);
         return {
           orcamento_id: novo.id,
           nome: it.nome,
           fornecedor: it.fornecedor || null,
           referencias: it.referencias || [],
+          ordem: index,
           custo_unit: it.custoUnit,
           quantidade: it.quantidade,
           frete: it.frete,

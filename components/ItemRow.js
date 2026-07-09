@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { computeItem, margemCor, COMISSAO_MINIMA } from "@/lib/calc";
-import { formatMoney, formatPct, isUrl, urlHref } from "@/lib/format";
+import { formatMoney, formatMoneyPreciso, formatPct, isUrl, urlHref } from "@/lib/format";
 
 const OUTROS = "__outros__";
 const campo =
@@ -10,7 +10,15 @@ function selecionarTudo(e) {
   e.target.select();
 }
 
-export default function ItemRow({ item, onChange, onRemove, fornecedores, aoCadastrarFornecedor }) {
+export default function ItemRow({
+  item,
+  onChange,
+  onRemove,
+  onMoverCima,
+  onMoverBaixo,
+  fornecedores,
+  aoCadastrarFornecedor,
+}) {
   const r = computeItem(item);
   const cor = margemCor(r.margemPct);
   const comissaoBaixa = r.comissaoValor < COMISSAO_MINIMA;
@@ -238,13 +246,29 @@ export default function ItemRow({ item, onChange, onRemove, fornecedores, aoCada
           {formatMoney(r.impostoValor)}
         </div>
       </td>
-      <td className="px-1.5 py-1 text-center font-bold whitespace-nowrap">{formatMoney(r.precoUnitario)}</td>
+      <td className="px-1.5 py-1 text-center font-bold whitespace-nowrap">{formatMoneyPreciso(r.precoUnitario)}</td>
       <td className="px-1.5 py-1 text-center font-bold whitespace-nowrap">{formatMoney(r.precoVendaTotal)}</td>
       <td className="px-1.5 py-1 text-center font-extrabold whitespace-nowrap" style={{ color: cor }}>
         {formatMoney(r.margem)}
         <div className="text-[9px] font-semibold opacity-80">{formatPct(r.margemPct)}</div>
       </td>
-      <td className="px-1 py-1 text-center">
+      <td className="px-1 py-1 text-center whitespace-nowrap">
+        <button
+          onClick={() => onMoverCima?.()}
+          disabled={!onMoverCima}
+          aria-label="Mover item para cima"
+          className="text-slate-400 hover:text-azul disabled:opacity-20 font-bold text-xs leading-none px-0.5"
+        >
+          ▲
+        </button>
+        <button
+          onClick={() => onMoverBaixo?.()}
+          disabled={!onMoverBaixo}
+          aria-label="Mover item para baixo"
+          className="text-slate-400 hover:text-azul disabled:opacity-20 font-bold text-xs leading-none px-0.5"
+        >
+          ▼
+        </button>
         <button
           onClick={onRemove}
           aria-label="Remover item"
