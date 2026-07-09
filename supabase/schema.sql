@@ -23,6 +23,7 @@ create table if not exists public.orcamento_itens (
   nome text,
   fornecedor text,
   referencia text,
+  referencias text[] not null default (array[])::text[],
   custo_unit numeric not null default 0,
   quantidade numeric not null default 1,
   frete numeric not null default 0,
@@ -64,6 +65,27 @@ create policy "orcamento_itens_update_auth" on public.orcamento_itens for update
 
 drop policy if exists "orcamento_itens_delete_auth" on public.orcamento_itens;
 create policy "orcamento_itens_delete_auth" on public.orcamento_itens for delete to authenticated using (true);
+
+-- Lista compartilhada de fornecedores (cresce conforme os usuários cadastram
+-- novos em "Outros" na tela do item).
+create table if not exists public.fornecedores (
+  id uuid primary key default gen_random_uuid(),
+  nome text not null unique,
+  criado_em timestamptz not null default now()
+);
+
+alter table public.fornecedores enable row level security;
+
+drop policy if exists "fornecedores_select_auth" on public.fornecedores;
+create policy "fornecedores_select_auth" on public.fornecedores for select to authenticated using (true);
+
+drop policy if exists "fornecedores_insert_auth" on public.fornecedores;
+create policy "fornecedores_insert_auth" on public.fornecedores for insert to authenticated with check (true);
+
+insert into public.fornecedores (nome) values
+  ('EDG Gráfica'), ('M2 Flex'), ('Cubo CMYK'), ('Trio Gráfica'), ('Passe Vip'),
+  ('Drika Brindes'), ('Mercado Livre'), ('Printi'), ('LG Sign')
+on conflict (nome) do nothing;
 
 -- Rode o bloco abaixo SOMENTE DEPOIS de criar os 2 usuários em
 -- Authentication > Users > Add user (email + senha). Isso grava o nome de cada um

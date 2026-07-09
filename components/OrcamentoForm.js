@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { computeItem, computeTotals, COMISSAO_MINIMA } from "@/lib/calc";
 import { formatMoney } from "@/lib/format";
 import { EMPRESAS, EMPRESA_PADRAO } from "@/lib/empresas";
+import { FORNECEDORES_PADRAO } from "@/lib/fornecedores";
 import { createClient } from "@/lib/supabase/client";
 import ItemRow from "@/components/ItemRow";
 import MargemBadge from "@/components/MargemBadge";
@@ -14,7 +15,7 @@ const novoItem = (comissaoPct, impostoPct) => ({
   id: uid++,
   nome: "",
   fornecedor: "",
-  referencia: "",
+  referencias: [],
   custoUnit: 0,
   quantidade: 1,
   frete: 0,
@@ -43,7 +44,26 @@ export default function OrcamentoForm({ inicial }) {
   const [erro, setErro] = useState(null);
   const [salvo, setSalvo] = useState(false);
   const [linkCopiado, setLinkCopiado] = useState(false);
-  const [gerandoPdf, setGerandoPdf] = useState(false);
+  const [gerandoPdf, setGerandoPdf] = useState(null);
+  const [fornecedores, setFornecedores] = useState(FORNECEDORES_PADRAO);
+
+  useEffect(() => {
+    supabase
+      .from("fornecedores")
+      .select("nome")
+      .order("criado_em", { ascending: true })
+      .then(({ data }) => {
+        if (data?.length) setFornecedores(data.map((f) => f.nome));
+      });
+  }, [supabase]);
+
+  async function aoCadastrarFornecedor(nome) {
+    setFornecedores((prev) => {
+      if (prev.some((f) => f.toLowerCase() === nome.toLowerCase())) return prev;
+      return [...prev, nome];
+    });
+    await supabase.from("fornecedores").upsert({ nome }, { onConflict: "nome", ignoreDuplicates: true });
+  }
 
   const totals = useMemo(() => computeTotals(itens), [itens]);
   const itensComissaoBaixa = useMemo(
@@ -143,7 +163,7 @@ export default function OrcamentoForm({ inicial }) {
         orcamento_id: orcamentoId,
         nome: it.nome || "(item)",
         fornecedor: it.fornecedor || null,
-        referencia: it.referencia || null,
+        referencias: it.referencias || [],
         custo_unit: it.custoUnit,
         quantidade: it.quantidade,
         frete: it.frete,
@@ -172,8 +192,8 @@ export default function OrcamentoForm({ inicial }) {
     }
   }
 
-  async function gerarPDF() {
-    setGerandoPdf(true);
+  async function gerarPDF(modo) {
+    setGerandoPdf(modo);
     try {
       const [{ pdf }, { default: OrcamentoPDF }] = await Promise.all([
         import("@react-pdf/renderer"),
@@ -185,6 +205,7 @@ export default function OrcamentoForm({ inicial }) {
 
       const blob = await pdf(
         <OrcamentoPDF
+          modo={modo}
           numero={numero || null}
           cliente={cliente}
           observacao={observacao}
@@ -199,11 +220,11 @@ export default function OrcamentoForm({ inicial }) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `orcamento_${(cliente || "sem-nome").trim().replace(/\s+/g, "_") || "orcamento"}.pdf`;
+      a.download = `orcamento_${(cliente || "sem-nome").trim().replace(/\s+/g, "_") || "orcamento"}_${modo}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } finally {
-      setGerandoPdf(false);
+      setGerandoPdf(null);
     }
   }
 
@@ -324,6 +345,8 @@ export default function OrcamentoForm({ inicial }) {
                 <ItemRow
                   key={it.id}
                   item={it}
+                  fornecedores={fornecedores}
+                  aoCadastrarFornecedor={aoCadastrarFornecedor}
                   onChange={(novo) => updateItem(it.id, novo)}
                   onRemove={() => removeItem(it.id)}
                 />
@@ -375,11 +398,18 @@ export default function OrcamentoForm({ inicial }) {
             {salvando ? "Salvando..." : "Salvar orçamento"}
           </button>
           <button
-            onClick={gerarPDF}
-            disabled={gerandoPdf}
+            onClick={() => gerarPDF("cliente")}
+            disabled={Boolean(gerandoPdf)}
             className="flex-1 py-3 text-sm font-bold bg-azul text-white rounded-xl disabled:opacity-60"
           >
-            {gerandoPdf ? "Gerando PDF..." : "Gerar PDF"}
+            {gerandoPdf === "cliente" ? "Gerando..." : "PDF Cliente"}
+          </button>
+          <button
+            onClick={() => gerarPDF("fornecedor")}
+            disabled={Boolean(gerandoPdf)}
+            className="flex-1 py-3 text-sm font-bold bg-slate-700 text-white rounded-xl disabled:opacity-60"
+          >
+            {gerandoPdf === "fornecedor" ? "Gerando..." : "PDF Fornecedor"}
           </button>
         </div>
       </section>

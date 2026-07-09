@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { computeItem, margemCor, COMISSAO_MINIMA } from "@/lib/calc";
-import { formatMoney, formatPct } from "@/lib/format";
-import { FORNECEDORES } from "@/lib/fornecedores";
+import { formatMoney, formatPct, isUrl, urlHref } from "@/lib/format";
 
 const OUTROS = "__outros__";
 const campo =
@@ -11,18 +10,21 @@ function selecionarTudo(e) {
   e.target.select();
 }
 
-export default function ItemRow({ item, onChange, onRemove }) {
+export default function ItemRow({ item, onChange, onRemove, fornecedores, aoCadastrarFornecedor }) {
   const r = computeItem(item);
   const cor = margemCor(r.margemPct);
   const comissaoBaixa = r.comissaoValor < COMISSAO_MINIMA;
+  const referencias = item.referencias || [];
 
   const [outrosAtivo, setOutrosAtivo] = useState(
-    Boolean(item.fornecedor) && !FORNECEDORES.includes(item.fornecedor)
+    Boolean(item.fornecedor) && !fornecedores.includes(item.fornecedor)
   );
   const [refAberta, setRefAberta] = useState(false);
+  const [refPinada, setRefPinada] = useState(false);
+  const [novaRef, setNovaRef] = useState("");
 
   function set(field, value) {
-    const isTexto = field === "nome" || field === "fornecedor" || field === "referencia";
+    const isTexto = field === "nome" || field === "fornecedor";
     onChange({ ...item, [field]: isTexto ? value : parseFloat(value) || 0 });
   }
 
@@ -36,63 +38,137 @@ export default function ItemRow({ item, onChange, onRemove }) {
     }
   }
 
-  const temReferencia = Boolean(item.referencia);
+  function confirmarNovoFornecedor(e) {
+    const nome = e.target.value.trim();
+    if (nome) aoCadastrarFornecedor(nome);
+  }
+
+  function adicionarReferencia() {
+    const v = novaRef.trim();
+    if (!v) return;
+    onChange({ ...item, referencias: [...referencias, v] });
+    setNovaRef("");
+  }
+
+  function removerReferencia(i) {
+    onChange({ ...item, referencias: referencias.filter((_, idx) => idx !== i) });
+  }
+
+  function abrirPopover() {
+    if (!refPinada) setRefAberta(true);
+  }
+
+  function fecharPopover() {
+    if (!refPinada) setRefAberta(false);
+  }
+
+  function alternarPin() {
+    const novoPin = !refPinada;
+    setRefPinada(novoPin);
+    setRefAberta(novoPin);
+  }
 
   return (
     <tr className="border-b border-slate-200 align-middle text-xs">
       <td className="text-left px-1 py-1 min-w-[140px]">
-        <div className="flex items-center gap-1">
-          <input
-            type="text"
-            value={item.nome}
-            placeholder="Descrição"
-            onChange={(e) => set("nome", e.target.value)}
-            className={campo + " flex-1 min-w-[100px]"}
-          />
-          <button
-            type="button"
-            onClick={() => setRefAberta((v) => !v)}
-            title={item.referencia || "Adicionar referência (link, código...)"}
-            className={
-              "shrink-0 w-5 h-5 rounded text-[10px] leading-none border " +
-              (temReferencia
-                ? "bg-amarelo/20 border-amarelo text-amarelo font-bold"
-                : "border-slate-300 text-slate-400")
-            }
-          >
-            ✎
-          </button>
-        </div>
-        {refAberta && (
-          <input
-            type="text"
-            value={item.referencia || ""}
-            placeholder="Referência: link, código..."
-            onChange={(e) => set("referencia", e.target.value)}
-            className={campo + " mt-1"}
-          />
-        )}
+        <input
+          type="text"
+          value={item.nome}
+          placeholder="Descrição"
+          onChange={(e) => set("nome", e.target.value)}
+          className={campo + " min-w-[120px]"}
+        />
       </td>
       <td className="px-1 py-1 min-w-[110px]">
-        <select
-          value={outrosAtivo ? OUTROS : item.fornecedor || ""}
-          onChange={(e) => selecionarFornecedor(e.target.value)}
-          className={campo}
-        >
-          <option value="">Selecionar...</option>
-          {FORNECEDORES.map((f) => (
-            <option key={f} value={f}>
-              {f}
-            </option>
-          ))}
-          <option value={OUTROS}>Outros...</option>
-        </select>
+        <div className="flex items-center gap-1">
+          <select
+            value={outrosAtivo ? OUTROS : item.fornecedor || ""}
+            onChange={(e) => selecionarFornecedor(e.target.value)}
+            className={campo + " flex-1"}
+          >
+            <option value="">Selecionar...</option>
+            {fornecedores.map((f) => (
+              <option key={f} value={f}>
+                {f}
+              </option>
+            ))}
+            <option value={OUTROS}>Outros...</option>
+          </select>
+
+          <div
+            className="relative shrink-0"
+            onMouseEnter={abrirPopover}
+            onMouseLeave={fecharPopover}
+          >
+            <button
+              type="button"
+              onClick={alternarPin}
+              title="Referências do fornecedor (link, código...)"
+              className={
+                "w-5 h-5 rounded text-[10px] leading-none border " +
+                (referencias.length > 0
+                  ? "bg-amarelo/20 border-amarelo text-amarelo font-bold"
+                  : "border-slate-300 text-slate-400")
+              }
+            >
+              {referencias.length > 0 ? referencias.length : "✎"}
+            </button>
+
+            {refAberta && (
+              <div className="absolute z-20 left-0 top-full mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-lg p-2 text-left normal-case">
+                {referencias.length === 0 && (
+                  <p className="text-[10px] text-slate-400 mb-1">Nenhuma referência ainda.</p>
+                )}
+                {referencias.map((ref, i) => (
+                  <div key={i} className="flex items-center justify-between gap-1 py-0.5">
+                    {isUrl(ref) ? (
+                      <a
+                        href={urlHref(ref)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-azul underline truncate text-xs"
+                      >
+                        {ref}
+                      </a>
+                    ) : (
+                      <span className="truncate text-xs">{ref}</span>
+                    )}
+                    <button
+                      onClick={() => removerReferencia(i)}
+                      className="text-vermelho font-bold px-1 shrink-0"
+                      aria-label="Remover referência"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <div className="flex gap-1 mt-1.5">
+                  <input
+                    type="text"
+                    value={novaRef}
+                    onChange={(e) => setNovaRef(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && adicionarReferencia()}
+                    placeholder="Nova referência"
+                    className="flex-1 border border-slate-300 rounded px-1.5 py-1 text-xs focus:outline-none focus:border-azul"
+                  />
+                  <button
+                    onClick={adicionarReferencia}
+                    className="bg-azul text-white rounded px-2 text-xs font-bold"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
         {outrosAtivo && (
           <input
             type="text"
             value={item.fornecedor}
             placeholder="Nome do fornecedor"
             onChange={(e) => set("fornecedor", e.target.value)}
+            onBlur={confirmarNovoFornecedor}
             className={campo + " mt-1"}
           />
         )}

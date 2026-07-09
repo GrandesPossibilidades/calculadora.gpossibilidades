@@ -67,7 +67,7 @@ export default function HistoricoTable({ orcamentos, erro }) {
     return (data || []).map((row) => ({
       nome: row.nome,
       fornecedor: row.fornecedor || "",
-      referencia: row.referencia || "",
+      referencias: row.referencias || [],
       custoUnit: Number(row.custo_unit),
       quantidade: Number(row.quantidade),
       frete: Number(row.frete),
@@ -76,7 +76,7 @@ export default function HistoricoTable({ orcamentos, erro }) {
     }));
   }
 
-  async function gerarPDF(o) {
+  async function gerarPDF(o, modo) {
     setCarregandoId(o.id);
     try {
       const itens = await buscarItens(o.id);
@@ -88,6 +88,7 @@ export default function HistoricoTable({ orcamentos, erro }) {
 
       const blob = await pdf(
         <OrcamentoPDF
+          modo={modo}
           numero={o.numero}
           cliente={o.cliente}
           observacao={o.observacao}
@@ -102,7 +103,7 @@ export default function HistoricoTable({ orcamentos, erro }) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `orcamento_${(o.cliente || "sem-nome").trim().replace(/\s+/g, "_")}.pdf`;
+      a.download = `orcamento_${(o.cliente || "sem-nome").trim().replace(/\s+/g, "_")}_${modo}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } finally {
@@ -150,7 +151,7 @@ export default function HistoricoTable({ orcamentos, erro }) {
           orcamento_id: novo.id,
           nome: it.nome,
           fornecedor: it.fornecedor || null,
-          referencia: it.referencia || null,
+          referencias: it.referencias || [],
           custo_unit: it.custoUnit,
           quantidade: it.quantidade,
           frete: it.frete,
@@ -238,13 +239,20 @@ export default function HistoricoTable({ orcamentos, erro }) {
                     ⋮
                   </button>
                   {menuAberto === o.id && (
-                    <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg py-1 text-sm">
+                    <div className="absolute right-0 mt-1 w-52 bg-white border border-slate-200 rounded-lg shadow-lg py-1 text-sm">
                       <button
-                        onClick={() => gerarPDF(o)}
+                        onClick={() => gerarPDF(o, "cliente")}
                         disabled={carregando}
                         className="w-full text-left px-3 py-2 hover:bg-slate-50 disabled:opacity-50"
                       >
-                        {carregando ? "Gerando..." : "Gerar PDF"}
+                        {carregando ? "Gerando..." : "Gerar PDF Cliente"}
+                      </button>
+                      <button
+                        onClick={() => gerarPDF(o, "fornecedor")}
+                        disabled={carregando}
+                        className="w-full text-left px-3 py-2 hover:bg-slate-50 disabled:opacity-50"
+                      >
+                        {carregando ? "Gerando..." : "Gerar PDF Fornecedor"}
                       </button>
                       <button
                         onClick={() => copiarLink(o)}
