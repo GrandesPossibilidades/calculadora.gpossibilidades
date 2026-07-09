@@ -192,6 +192,9 @@ export default function ItemRow({ item, onChange, onRemove, fornecedores, aoCada
           onChange={(e) => set("custoUnit", e.target.value)}
           className={campo + " w-16 text-center"}
         />
+        <div className="text-[9px] text-slate-500 mt-0.5 whitespace-nowrap">
+          Total: {formatMoney(r.custoTotal)}
+        </div>
       </td>
       <td className="px-1 py-1">
         <input
@@ -212,11 +215,15 @@ export default function ItemRow({ item, onChange, onRemove, fornecedores, aoCada
           onChange={(e) => set("comissaoPct", e.target.value)}
           className={campo + " w-12 text-center"}
         />
-        {comissaoBaixa && (
-          <div className="text-[9px] font-semibold text-vermelho mt-0.5 whitespace-nowrap">
-            &lt; {formatMoney(COMISSAO_MINIMA)}
-          </div>
-        )}
+        <div
+          className={
+            "text-[9px] mt-0.5 whitespace-nowrap font-semibold " +
+            (comissaoBaixa ? "text-vermelho" : "text-slate-500")
+          }
+        >
+          {formatMoney(r.comissaoValor)}
+          {comissaoBaixa && " (< 150)"}
+        </div>
       </td>
       <td className="px-1 py-1">
         <input
@@ -227,6 +234,9 @@ export default function ItemRow({ item, onChange, onRemove, fornecedores, aoCada
           onChange={(e) => set("impostoPct", e.target.value)}
           className={campo + " w-12 text-center"}
         />
+        <div className="text-[9px] text-slate-500 mt-0.5 whitespace-nowrap">
+          {formatMoney(r.impostoValor)}
+        </div>
       </td>
       <td className="px-1.5 py-1 text-center font-bold whitespace-nowrap">{formatMoney(r.precoUnitario)}</td>
       <td className="px-1.5 py-1 text-center font-bold whitespace-nowrap">{formatMoney(r.precoVendaTotal)}</td>

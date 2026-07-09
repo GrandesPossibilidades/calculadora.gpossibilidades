@@ -330,7 +330,7 @@ export default function OrcamentoForm({ inicial }) {
                 <th className="text-left px-1 py-1.5 rounded-l-md">Item</th>
                 <th className="px-1 py-1.5">Fornecedor</th>
                 <th className="px-1 py-1.5">Qtd</th>
-                <th className="px-1 py-1.5">Custo compra</th>
+                <th className="px-1 py-1.5">Custo unit. compra</th>
                 <th className="px-1 py-1.5">Frete</th>
                 <th className="px-1 py-1.5">Com. %</th>
                 <th className="px-1 py-1.5">Imp. %</th>
@@ -374,16 +374,32 @@ export default function OrcamentoForm({ inicial }) {
         <h2 className="text-xs font-bold uppercase tracking-wide text-azul border-b-2 border-slate-100 pb-1.5 mb-3">
           Resultado do orçamento
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="rounded-xl p-4 text-center bg-slate-100 text-slate-600">
-            <div className="text-xs font-semibold uppercase tracking-wide">Custo total</div>
-            <div className="text-2xl font-extrabold mt-0.5">{formatMoney(totals.custoTotal)}</div>
+        <div className="flex flex-col gap-1.5 text-sm">
+          <div className="flex justify-between">
+            <span className="text-slate-500">Custo total do material</span>
+            <span className="font-semibold">{formatMoney(totals.custoTotal)}</span>
           </div>
-          <div className="rounded-xl p-4 text-center bg-blue-50 text-azul">
-            <div className="text-xs font-semibold uppercase tracking-wide">Preço total (cliente)</div>
-            <div className="text-2xl font-extrabold mt-0.5">{formatMoney(totals.precoTotal)}</div>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Custo total do frete</span>
+            <span className="font-semibold">{formatMoney(totals.freteTotal)}</span>
           </div>
-          <MargemBadge margem={totals.margemTotal} margemPct={totals.margemPct} />
+          <div className="flex justify-between">
+            <span className="text-slate-500">Custo total do imposto</span>
+            <span className="font-semibold">{formatMoney(totals.impostoTotal)}</span>
+          </div>
+          <div className="flex justify-between border-t border-slate-100 pt-1.5 mt-1">
+            <span className="text-azul font-semibold">Preço total cobrado (cliente)</span>
+            <span className="font-bold text-azul">{formatMoney(totals.precoTotal)}</span>
+          </div>
+        </div>
+
+        <div className="mt-3">
+          <MargemBadge
+            margem={totals.margemTotal}
+            margemPct={totals.margemPct}
+            titulo="Margem líquida (lucro real)"
+            descricao="= Preço total − material − frete − imposto"
+          />
         </div>
 
         {erro && <p className="mt-3 text-sm font-semibold text-vermelho">{erro}</p>}
