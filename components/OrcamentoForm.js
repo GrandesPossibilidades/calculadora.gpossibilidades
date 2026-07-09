@@ -105,6 +105,13 @@ export default function OrcamentoForm({ inicial }) {
     });
   }
 
+  function mensagemErro(error) {
+    if (error?.message?.includes("orcamentos_numero_unique")) {
+      return "Esse número de orçamento já está em uso. Escolha outro ou deixe o campo vazio para gerar automaticamente.";
+    }
+    return error?.message || "Erro desconhecido.";
+  }
+
   async function salvar() {
     setErro(null);
     setSalvo(false);
@@ -141,7 +148,7 @@ export default function OrcamentoForm({ inicial }) {
         .eq("id", orcamentoId);
 
       if (errUpdate) {
-        setErro(errUpdate.message);
+        setErro(mensagemErro(errUpdate));
         setSalvando(false);
         return;
       }
@@ -160,7 +167,7 @@ export default function OrcamentoForm({ inicial }) {
         .single();
 
       if (errOrc) {
-        setErro(errOrc.message);
+        setErro(mensagemErro(errOrc));
         setSalvando(false);
         return;
       }

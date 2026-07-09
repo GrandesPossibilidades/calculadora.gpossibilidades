@@ -38,6 +38,31 @@ create table if not exists public.orcamento_itens (
 create index if not exists orcamento_itens_orcamento_id_idx on public.orcamento_itens (orcamento_id);
 create index if not exists orcamentos_criado_em_idx on public.orcamentos (criado_em desc);
 
+-- Numero do orcamento nunca pode repetir. A sequence sozinha nao garante isso
+-- (usuario pode digitar um numero manual), entao: constraint de unicidade +
+-- trigger que resincroniza a sequence pro maior numero em uso sempre que um
+-- orcamento e criado/editado. Assim o proximo automatico nunca colide.
+alter table public.orcamentos
+  drop constraint if exists orcamentos_numero_unique;
+alter table public.orcamentos
+  add constraint orcamentos_numero_unique unique (numero);
+
+create or replace function public.sync_orcamentos_numero_seq()
+returns trigger as $$
+begin
+  perform setval(
+    'public.orcamentos_numero_seq',
+    greatest((select coalesce(max(numero), 0) from public.orcamentos), 1)
+  );
+  return null;
+end;
+$$ language plpgsql;
+
+drop trigger if exists trg_sync_numero_seq on public.orcamentos;
+create trigger trg_sync_numero_seq
+after insert or update of numero on public.orcamentos
+for each row execute function public.sync_orcamentos_numero_seq();
+
 alter table public.orcamentos enable row level security;
 alter table public.orcamento_itens enable row level security;
 
