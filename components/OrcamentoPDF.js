@@ -1,6 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, Link } from "@react-pdf/renderer";
 import { computeItem, computeTotals, margemCor } from "@/lib/calc";
-import { formatMoney, formatMoneyPreciso, formatPct, isUrl, urlHref } from "@/lib/format";
+import { formatMoney, formatPct, isUrl, urlHref } from "@/lib/format";
 
 const styles = StyleSheet.create({
   page: { padding: 24, fontSize: 9, fontFamily: "Helvetica", color: "#1B2A41" },
@@ -140,7 +140,7 @@ export default function OrcamentoPDF({
                 {fornecedorMode && <Text style={[styles.td, colNum]}>{formatMoney(it.frete)}</Text>}
                 {fornecedorMode && <Text style={[styles.td, colNum]}>{it.comissaoPct}%</Text>}
                 {fornecedorMode && <Text style={[styles.td, colNum]}>{it.impostoPct}%</Text>}
-                <Text style={[styles.td, colNum]}>{formatMoneyPreciso(r.precoUnitario)}</Text>
+                <Text style={[styles.td, colNum]}>{formatMoney(r.precoUnitario)}</Text>
                 <Text style={[styles.td, colNum]}>{formatMoney(r.precoVendaTotal)}</Text>
                 {fornecedorMode && (
                   <Text style={[styles.td, colNum, { color: corMargem, fontWeight: 700 }]}>

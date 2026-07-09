@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { computeItem, margemCor, COMISSAO_MINIMA } from "@/lib/calc";
-import { formatMoney, formatMoneyPreciso, formatPct, isUrl, urlHref } from "@/lib/format";
+import { formatMoney, formatPct, isUrl, urlHref } from "@/lib/format";
 
 const OUTROS = "__outros__";
 const campo =
@@ -60,6 +60,17 @@ export default function ItemRow({
 
   function removerReferencia(i) {
     onChange({ ...item, referencias: referencias.filter((_, idx) => idx !== i) });
+  }
+
+  // Margem líquida do item == valor da comissão (é assim que a cascata é definida:
+  // tudo que sobra depois de custo/frete/imposto é exatamente a comissão da GP).
+  // Editar a margem direto resolve a comissão % necessária pra chegar nesse valor,
+  // sem mexer em custo, frete ou imposto.
+  function setMargemDesejada(valor) {
+    const novaMargem = parseFloat(valor) || 0;
+    const base = (item.custoUnit || 0) * (item.quantidade || 0) + (item.frete || 0);
+    const novaComissaoPct = base > 0 ? Math.round((novaMargem / base) * 100 * 10000) / 10000 : 0;
+    onChange({ ...item, comissaoPct: novaComissaoPct });
   }
 
   function abrirPopover() {
@@ -246,11 +257,22 @@ export default function ItemRow({
           {formatMoney(r.impostoValor)}
         </div>
       </td>
-      <td className="px-1.5 py-1 text-center font-bold whitespace-nowrap">{formatMoneyPreciso(r.precoUnitario)}</td>
+      <td className="px-1.5 py-1 text-center font-bold whitespace-nowrap">{formatMoney(r.precoUnitario)}</td>
       <td className="px-1.5 py-1 text-center font-bold whitespace-nowrap">{formatMoney(r.precoVendaTotal)}</td>
-      <td className="px-1.5 py-1 text-center font-extrabold whitespace-nowrap" style={{ color: cor }}>
-        {formatMoney(r.margem)}
-        <div className="text-[9px] font-semibold opacity-80">{formatPct(r.margemPct)}</div>
+      <td className="px-1 py-1 text-center" style={{ color: cor }}>
+        <input
+          type="number"
+          step="1"
+          value={Math.round(r.margem * 100) / 100}
+          onFocus={selecionarTudo}
+          onChange={(e) => setMargemDesejada(e.target.value)}
+          title="Editar a margem direto ajusta a comissão % pra chegar nesse valor"
+          className={campo + " w-16 text-center font-extrabold"}
+          style={{ color: cor }}
+        />
+        <div className="text-[9px] font-semibold opacity-80" style={{ color: cor }}>
+          {formatPct(r.margemPct)}
+        </div>
       </td>
       <td className="px-1 py-1 text-center whitespace-nowrap">
         <button
