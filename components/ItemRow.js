@@ -14,6 +14,7 @@ export default function ItemRow({
   item,
   onChange,
   onRemove,
+  onDuplicar,
   onMoverCima,
   onMoverBaixo,
   fornecedores,
@@ -290,6 +291,14 @@ export default function ItemRow({
           className="text-slate-400 hover:text-azul disabled:opacity-20 font-bold text-xs leading-none px-0.5"
         >
           ▼
+        </button>
+        <button
+          onClick={onDuplicar}
+          aria-label="Duplicar item"
+          title="Duplicar item"
+          className="text-slate-400 hover:text-azul font-bold text-xs leading-none px-0.5"
+        >
+          ⧉
         </button>
         <button
           onClick={onRemove}

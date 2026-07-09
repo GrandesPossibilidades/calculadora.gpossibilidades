@@ -92,6 +92,16 @@ create policy "orcamento_itens_update_auth" on public.orcamento_itens for update
 drop policy if exists "orcamento_itens_delete_auth" on public.orcamento_itens;
 create policy "orcamento_itens_delete_auth" on public.orcamento_itens for delete to authenticated using (true);
 
+-- View pública (sem custo/margem/fornecedor) só pra gerar a prévia de link do
+-- WhatsApp/Telegram/etc quando alguém compartilha o link do orçamento. Usuário
+-- confirmou que numero/cliente/observacao podem ficar visíveis sem login pra
+-- isso funcionar; tudo mais continua protegido por RLS na tabela real.
+create or replace view public.orcamentos_preview as
+  select id, numero, cliente, observacao, empresa
+  from public.orcamentos;
+
+grant select on public.orcamentos_preview to anon, authenticated;
+
 -- Lista compartilhada de fornecedores (cresce conforme os usuários cadastram
 -- novos em "Outros" na tela do item).
 create table if not exists public.fornecedores (

@@ -29,7 +29,22 @@ export async function proxy(request) {
 
   const isLoginPage = request.nextUrl.pathname.startsWith("/login");
 
-  if (!user && !isLoginPage) {
+  // Bots de prévia de link (WhatsApp, Telegram, etc.) não têm login. Deixa
+  // passar só eles pra conseguirem gerar a prévia (número/cliente/descrição,
+  // via view pública "orcamentos_preview" que só expõe esses 3 campos — nada
+  // de custo/margem/fornecedor). Decisão explícita do usuário: aceita que um
+  // User-Agent falsificado veria no máximo esses mesmos 3 campos já públicos
+  // — o dado sensível de verdade (tabela orcamentos completa) continua
+  // travado pelo RLS do Postgres pra quem não estiver autenticado de
+  // verdade, independente do que essa checagem de UA deixar passar aqui.
+  const userAgent = request.headers.get("user-agent") || "";
+  const isLinkPreviewBot =
+    /WhatsApp|facebookexternalhit|Twitterbot|TelegramBot|Slackbot|LinkedInBot|Discordbot|SkypeUriPreview|Pinterest|redditbot|Applebot/i.test(
+      userAgent
+    );
+  const isOrcamentoPreview = request.nextUrl.pathname.startsWith("/orcamento/");
+
+  if (!user && !isLoginPage && !(isLinkPreviewBot && isOrcamentoPreview)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

@@ -98,6 +98,17 @@ export default function OrcamentoForm({ inicial }) {
     });
   }
 
+  function duplicarItem(id) {
+    setItens((prev) => {
+      const idx = prev.findIndex((it) => it.id === id);
+      if (idx === -1) return prev;
+      const copia = { ...prev[idx], id: uid++ };
+      const novoArray = [...prev];
+      novoArray.splice(idx + 1, 0, copia);
+      return novoArray;
+    });
+  }
+
   function copiarLink() {
     navigator.clipboard.writeText(window.location.href).then(() => {
       setLinkCopiado(true);
@@ -368,6 +379,7 @@ export default function OrcamentoForm({ inicial }) {
                   aoCadastrarFornecedor={aoCadastrarFornecedor}
                   onChange={(novo) => updateItem(it.id, novo)}
                   onRemove={() => removeItem(it.id)}
+                  onDuplicar={() => duplicarItem(it.id)}
                   onMoverCima={index > 0 ? () => moverItem(it.id, -1) : null}
                   onMoverBaixo={index < itens.length - 1 ? () => moverItem(it.id, 1) : null}
                 />
