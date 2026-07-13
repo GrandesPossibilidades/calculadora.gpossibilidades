@@ -92,6 +92,8 @@ export default function HistoricoTable({ orcamentos, erro }) {
           numero={o.numero}
           cliente={o.cliente}
           observacao={o.observacao}
+          prazoEntrega={o.prazo_entrega}
+          condicoesPagamento={o.condicoes_pagamento}
           empresa={EMPRESAS[o.empresa] || EMPRESAS.GA}
           itens={itens}
           totals={totals}
@@ -133,6 +135,8 @@ export default function HistoricoTable({ orcamentos, erro }) {
         .insert({
           cliente: o.cliente,
           observacao: o.observacao,
+          prazo_entrega: o.prazo_entrega,
+          condicoes_pagamento: o.condicoes_pagamento,
           empresa: o.empresa,
           custo_total: totals.custoTotal,
           preco_total: totals.precoTotal,

@@ -60,6 +60,8 @@ export default function OrcamentoPDF({
   numero,
   cliente,
   observacao,
+  prazoEntrega,
+  condicoesPagamento,
   empresa,
   itens,
   totals,
@@ -176,6 +178,23 @@ export default function OrcamentoPDF({
           <View style={styles.totalBox}>
             <Text style={styles.totalCap}>Total do orçamento</Text>
             <Text style={styles.totalBig}>{formatMoney(t.precoTotal)}</Text>
+          </View>
+        )}
+
+        {(prazoEntrega || condicoesPagamento) && (
+          <View style={{ marginTop: 12 }}>
+            {prazoEntrega ? (
+              <Text style={{ fontSize: 8.5, marginTop: 2 }}>
+                <Text style={{ fontWeight: 700 }}>Prazo de entrega: </Text>
+                {prazoEntrega}
+              </Text>
+            ) : null}
+            {condicoesPagamento ? (
+              <Text style={{ fontSize: 8.5, marginTop: 2 }}>
+                <Text style={{ fontWeight: 700 }}>Condições de pagamento: </Text>
+                {condicoesPagamento}
+              </Text>
+            ) : null}
           </View>
         )}
       </Page>

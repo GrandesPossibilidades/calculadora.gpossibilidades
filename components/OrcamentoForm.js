@@ -31,6 +31,8 @@ export default function OrcamentoForm({ inicial }) {
   const [numero, setNumero] = useState(inicial?.numero ?? "");
   const [cliente, setCliente] = useState(inicial?.cliente ?? "");
   const [observacao, setObservacao] = useState(inicial?.observacao ?? "");
+  const [prazoEntrega, setPrazoEntrega] = useState(inicial?.prazoEntrega ?? "");
+  const [condicoesPagamento, setCondicoesPagamento] = useState(inicial?.condicoesPagamento ?? "");
   const [empresa, setEmpresa] = useState(inicial?.empresa ?? EMPRESA_PADRAO);
   const [defComissao, setDefComissao] = useState(20);
   const [defImposto, setDefImposto] = useState(15);
@@ -140,6 +142,8 @@ export default function OrcamentoForm({ inicial }) {
     const dadosOrcamento = {
       cliente: cliente.trim() || null,
       observacao: observacao.trim() || null,
+      prazo_entrega: prazoEntrega.trim() || null,
+      condicoes_pagamento: condicoesPagamento.trim() || null,
       empresa,
       custo_total: totals.custoTotal,
       preco_total: totals.precoTotal,
@@ -239,6 +243,8 @@ export default function OrcamentoForm({ inicial }) {
           numero={numero || null}
           cliente={cliente}
           observacao={observacao}
+          prazoEntrega={prazoEntrega}
+          condicoesPagamento={condicoesPagamento}
           empresa={EMPRESAS[empresa]}
           itens={itens}
           totals={totals}
@@ -310,6 +316,23 @@ export default function OrcamentoForm({ inicial }) {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 mt-3">
+          <input
+            type="text"
+            value={prazoEntrega}
+            onChange={(e) => setPrazoEntrega(e.target.value)}
+            placeholder="Prazo de entrega (opcional, ex: 15 dias úteis após aprovação da arte)"
+            className="flex-1 border border-slate-300 rounded-lg px-3 py-2 font-semibold focus:outline-none focus:border-azul"
+          />
+          <input
+            type="text"
+            value={condicoesPagamento}
+            onChange={(e) => setCondicoesPagamento(e.target.value)}
+            placeholder="Condições de pagamento (opcional, ex: Boleto, 21 dias)"
+            className="flex-1 border border-slate-300 rounded-lg px-3 py-2 font-semibold focus:outline-none focus:border-azul"
+          />
         </div>
       </section>
 

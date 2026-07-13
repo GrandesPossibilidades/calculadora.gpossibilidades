@@ -80,6 +80,8 @@ export default async function OrcamentoPage({ params }) {
     numero: orcamento.numero,
     cliente: orcamento.cliente,
     observacao: orcamento.observacao,
+    prazoEntrega: orcamento.prazo_entrega,
+    condicoesPagamento: orcamento.condicoes_pagamento,
     empresa: orcamento.empresa,
     itens: (itensDb || []).map(mapItem),
   };

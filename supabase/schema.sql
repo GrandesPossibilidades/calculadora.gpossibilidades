@@ -9,6 +9,8 @@ create table if not exists public.orcamentos (
   criado_em timestamptz not null default now(),
   cliente text,
   observacao text,
+  prazo_entrega text,
+  condicoes_pagamento text,
   empresa text not null default 'GA' check (empresa in ('GA', 'PA')),
   custo_total numeric not null default 0,
   preco_total numeric not null default 0,
