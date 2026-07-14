@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { computeItem, margemCor, COMISSAO_MINIMA } from "@/lib/calc";
-import { formatMoney, formatPct, isUrl, urlHref } from "@/lib/format";
+import { formatMoney, formatMoneyPreciso, formatPct, isUrl, urlHref } from "@/lib/format";
 
 const OUTROS = "__outros__";
 const campo =
@@ -258,7 +258,7 @@ export default function ItemRow({
           {formatMoney(r.impostoValor)}
         </div>
       </td>
-      <td className="px-1.5 py-1 text-center font-bold whitespace-nowrap">{formatMoney(r.precoUnitario)}</td>
+      <td className="px-1.5 py-1 text-center font-bold whitespace-nowrap">{formatMoneyPreciso(r.precoUnitario)}</td>
       <td className="px-1.5 py-1 text-center font-bold whitespace-nowrap">{formatMoney(r.precoVendaTotal)}</td>
       <td className="px-1 py-1 text-center" style={{ color: cor }}>
         <input
