@@ -74,6 +74,28 @@ export default function ItemRow({
     onChange({ ...item, comissaoPct: novaComissaoPct });
   }
 
+  // Forçar o preço unitário ou o total de venda: custo, frete e % de imposto
+  // ficam travados como estão, e a comissão % é recalculada pra fechar
+  // exatamente no preço forçado (imposto em % nunca muda, só o R$ dele, já
+  // que a base onde ele incide muda).
+  function resolverComissaoPorPrecoTotal(precoVendaTotalDesejado) {
+    const base = (item.custoUnit || 0) * (item.quantidade || 0) + (item.frete || 0);
+    if (base <= 0) return 0;
+    const aposComissao = precoVendaTotalDesejado / (1 + (item.impostoPct || 0) / 100);
+    return Math.round((aposComissao / base - 1) * 100 * 10000) / 10000;
+  }
+
+  function setPrecoUnitarioDesejado(valor) {
+    const novoUnitario = parseFloat(valor) || 0;
+    const novoTotal = novoUnitario * (item.quantidade || 0);
+    onChange({ ...item, comissaoPct: resolverComissaoPorPrecoTotal(novoTotal) });
+  }
+
+  function setPrecoTotalDesejado(valor) {
+    const novoTotal = parseFloat(valor) || 0;
+    onChange({ ...item, comissaoPct: resolverComissaoPorPrecoTotal(novoTotal) });
+  }
+
   function abrirPopover() {
     if (!refPinada) setRefAberta(true);
   }
@@ -258,8 +280,28 @@ export default function ItemRow({
           {formatMoney(r.impostoValor)}
         </div>
       </td>
-      <td className="px-1.5 py-1 text-center font-bold whitespace-nowrap">{formatMoneyPreciso(r.precoUnitario)}</td>
-      <td className="px-1.5 py-1 text-center font-bold whitespace-nowrap">{formatMoney(r.precoVendaTotal)}</td>
+      <td className="px-1 py-1">
+        <input
+          type="number"
+          step="0.01"
+          value={Math.round(r.precoUnitario * 10000) / 10000}
+          onFocus={selecionarTudo}
+          onChange={(e) => setPrecoUnitarioDesejado(e.target.value)}
+          title="Forçar o preço unitário recalcula a comissão % (custo, frete e imposto ficam travados)"
+          className={campo + " w-20 text-center"}
+        />
+      </td>
+      <td className="px-1 py-1">
+        <input
+          type="number"
+          step="1"
+          value={Math.round(r.precoVendaTotal * 100) / 100}
+          onFocus={selecionarTudo}
+          onChange={(e) => setPrecoTotalDesejado(e.target.value)}
+          title="Forçar o total recalcula a comissão % (custo, frete e imposto ficam travados)"
+          className={campo + " w-20 text-center"}
+        />
+      </td>
       <td className="px-1 py-1 text-center" style={{ color: cor }}>
         <input
           type="number"
