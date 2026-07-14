@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { computeItem, margemCor, COMISSAO_MINIMA } from "@/lib/calc";
 import { formatMoney, formatMoneyPreciso, formatPct, isUrl, urlHref } from "@/lib/format";
 
@@ -8,6 +9,11 @@ const campo =
 
 function selecionarTudo(e) {
   e.target.select();
+}
+
+function autoAltura(e) {
+  e.target.style.height = "auto";
+  e.target.style.height = `${e.target.scrollHeight}px`;
 }
 
 export default function ItemRow({
@@ -24,12 +30,14 @@ export default function ItemRow({
   const cor = margemCor(r.margemPct);
   const comissaoBaixa = r.comissaoValor < COMISSAO_MINIMA;
   const referencias = item.referencias || [];
+  const iconRef = useRef(null);
 
   const [outrosAtivo, setOutrosAtivo] = useState(
     Boolean(item.fornecedor) && !fornecedores.includes(item.fornecedor)
   );
   const [refAberta, setRefAberta] = useState(false);
   const [refPinada, setRefPinada] = useState(false);
+  const [popoverPos, setPopoverPos] = useState(null);
   const [novaRef, setNovaRef] = useState("");
 
   function set(field, value) {
@@ -57,6 +65,8 @@ export default function ItemRow({
     if (!v) return;
     onChange({ ...item, referencias: [...referencias, v] });
     setNovaRef("");
+    setRefAberta(false);
+    setRefPinada(false);
   }
 
   function removerReferencia(i) {
@@ -96,8 +106,18 @@ export default function ItemRow({
     onChange({ ...item, comissaoPct: resolverComissaoPorPrecoTotal(novoTotal) });
   }
 
+  function atualizarPosicaoPopover() {
+    if (iconRef.current) {
+      const rect = iconRef.current.getBoundingClientRect();
+      setPopoverPos({ top: rect.bottom + 4, left: rect.left });
+    }
+  }
+
   function abrirPopover() {
-    if (!refPinada) setRefAberta(true);
+    if (!refPinada) {
+      atualizarPosicaoPopover();
+      setRefAberta(true);
+    }
   }
 
   function fecharPopover() {
@@ -106,22 +126,26 @@ export default function ItemRow({
 
   function alternarPin() {
     const novoPin = !refPinada;
+    if (novoPin) atualizarPosicaoPopover();
     setRefPinada(novoPin);
     setRefAberta(novoPin);
   }
 
   return (
     <tr className="border-b border-slate-200 align-middle text-xs">
-      <td className="text-left px-1 py-1 min-w-[140px]">
-        <input
-          type="text"
+      <td className="text-left px-1 py-1 min-w-[140px] align-top">
+        <textarea
+          rows={1}
           value={item.nome}
           placeholder="Descrição"
-          onChange={(e) => set("nome", e.target.value)}
-          className={campo + " min-w-[120px]"}
+          onChange={(e) => {
+            set("nome", e.target.value);
+            autoAltura(e);
+          }}
+          className={campo + " min-w-[120px] resize-none leading-snug"}
         />
       </td>
-      <td className="px-1 py-1 min-w-[110px]">
+      <td className="px-1 py-1 min-w-[110px] align-top">
         <div className="flex items-center gap-1">
           <select
             value={outrosAtivo ? OUTROS : item.fornecedor || ""}
@@ -137,12 +161,9 @@ export default function ItemRow({
             <option value={OUTROS}>Outros...</option>
           </select>
 
-          <div
-            className="relative shrink-0"
-            onMouseEnter={abrirPopover}
-            onMouseLeave={fecharPopover}
-          >
+          <div className="relative shrink-0" onMouseEnter={abrirPopover} onMouseLeave={fecharPopover}>
             <button
+              ref={iconRef}
               type="button"
               onClick={alternarPin}
               title="Referências do fornecedor (link, código...)"
@@ -156,52 +177,61 @@ export default function ItemRow({
               {referencias.length > 0 ? referencias.length : "✎"}
             </button>
 
-            {refAberta && (
-              <div className="absolute z-20 left-0 top-full mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-lg p-2 text-left normal-case">
-                {referencias.length === 0 && (
-                  <p className="text-[10px] text-slate-400 mb-1">Nenhuma referência ainda.</p>
-                )}
-                {referencias.map((ref, i) => (
-                  <div key={i} className="flex items-center justify-between gap-1 py-0.5">
-                    {isUrl(ref) ? (
-                      <a
-                        href={urlHref(ref)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-azul underline truncate text-xs"
+            {refAberta &&
+              popoverPos &&
+              createPortal(
+                <div
+                  className="fixed z-50 w-56 bg-white border border-slate-200 rounded-lg shadow-lg p-2 text-left normal-case"
+                  style={{ top: popoverPos.top, left: popoverPos.left }}
+                  onMouseEnter={() => setRefAberta(true)}
+                  onMouseLeave={fecharPopover}
+                >
+                  {referencias.length === 0 && (
+                    <p className="text-[10px] text-slate-400 mb-1">Nenhuma referência ainda.</p>
+                  )}
+                  {referencias.map((ref, i) => (
+                    <div key={i} className="flex items-center justify-between gap-1 py-0.5">
+                      {isUrl(ref) ? (
+                        <a
+                          href={urlHref(ref)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-azul underline truncate text-xs"
+                        >
+                          {ref}
+                        </a>
+                      ) : (
+                        <span className="truncate text-xs">{ref}</span>
+                      )}
+                      <button
+                        onClick={() => removerReferencia(i)}
+                        className="text-vermelho font-bold px-1 shrink-0"
+                        aria-label="Remover referência"
                       >
-                        {ref}
-                      </a>
-                    ) : (
-                      <span className="truncate text-xs">{ref}</span>
-                    )}
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <div className="flex gap-1 mt-1.5">
+                    <input
+                      type="text"
+                      autoFocus
+                      value={novaRef}
+                      onChange={(e) => setNovaRef(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && adicionarReferencia()}
+                      placeholder="Nova referência"
+                      className="flex-1 border border-slate-300 rounded px-1.5 py-1 text-xs focus:outline-none focus:border-azul"
+                    />
                     <button
-                      onClick={() => removerReferencia(i)}
-                      className="text-vermelho font-bold px-1 shrink-0"
-                      aria-label="Remover referência"
+                      onClick={adicionarReferencia}
+                      className="bg-azul text-white rounded px-2 text-xs font-bold"
                     >
-                      ×
+                      +
                     </button>
                   </div>
-                ))}
-                <div className="flex gap-1 mt-1.5">
-                  <input
-                    type="text"
-                    value={novaRef}
-                    onChange={(e) => setNovaRef(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && adicionarReferencia()}
-                    placeholder="Nova referência"
-                    className="flex-1 border border-slate-300 rounded px-1.5 py-1 text-xs focus:outline-none focus:border-azul"
-                  />
-                  <button
-                    onClick={adicionarReferencia}
-                    className="bg-azul text-white rounded px-2 text-xs font-bold"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            )}
+                </div>,
+                document.body
+              )}
           </div>
         </div>
         {outrosAtivo && (
@@ -215,7 +245,7 @@ export default function ItemRow({
           />
         )}
       </td>
-      <td className="px-1 py-1">
+      <td className="px-1 py-1 align-top">
         <input
           type="number"
           step="1"
@@ -225,7 +255,7 @@ export default function ItemRow({
           className={campo + " w-12 text-center"}
         />
       </td>
-      <td className="px-1 py-1">
+      <td className="px-1 py-1 align-top">
         <input
           type="number"
           step="0.5"
@@ -238,7 +268,7 @@ export default function ItemRow({
           Total: {formatMoney(r.custoTotal)}
         </div>
       </td>
-      <td className="px-1 py-1">
+      <td className="px-1 py-1 align-top">
         <input
           type="number"
           step="10"
@@ -248,7 +278,7 @@ export default function ItemRow({
           className={campo + " w-16 text-center"}
         />
       </td>
-      <td className="px-1 py-1">
+      <td className="px-1 py-1 align-top">
         <input
           type="number"
           step="1"
@@ -267,7 +297,7 @@ export default function ItemRow({
           {comissaoBaixa && " (< 150)"}
         </div>
       </td>
-      <td className="px-1 py-1">
+      <td className="px-1 py-1 align-top">
         <input
           type="number"
           step="1"
@@ -280,7 +310,7 @@ export default function ItemRow({
           {formatMoney(r.impostoValor)}
         </div>
       </td>
-      <td className="px-1 py-1">
+      <td className="px-1 py-1 align-top min-w-[84px]">
         <input
           type="number"
           step="0.01"
@@ -288,10 +318,10 @@ export default function ItemRow({
           onFocus={selecionarTudo}
           onChange={(e) => setPrecoUnitarioDesejado(e.target.value)}
           title="Forçar o preço unitário recalcula a comissão % (custo, frete e imposto ficam travados)"
-          className={campo + " w-20 text-center"}
+          className={campo + " text-center"}
         />
       </td>
-      <td className="px-1 py-1">
+      <td className="px-1 py-1 align-top min-w-[100px]">
         <input
           type="number"
           step="1"
@@ -299,10 +329,10 @@ export default function ItemRow({
           onFocus={selecionarTudo}
           onChange={(e) => setPrecoTotalDesejado(e.target.value)}
           title="Forçar o total recalcula a comissão % (custo, frete e imposto ficam travados)"
-          className={campo + " w-20 text-center"}
+          className={campo + " text-center"}
         />
       </td>
-      <td className="px-1 py-1 text-center" style={{ color: cor }}>
+      <td className="px-1 py-1 text-center align-top" style={{ color: cor }}>
         <input
           type="number"
           step="1"
@@ -317,7 +347,7 @@ export default function ItemRow({
           {formatPct(r.margemPct)}
         </div>
       </td>
-      <td className="px-1 py-1 text-center whitespace-nowrap">
+      <td className="px-1 py-1 text-center whitespace-nowrap align-top">
         <button
           onClick={() => onMoverCima?.()}
           disabled={!onMoverCima}
