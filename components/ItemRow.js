@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { computeItem, margemCor, COMISSAO_MINIMA } from "@/lib/calc";
-import { formatMoney, formatMoneyPreciso, formatPct, isUrl, urlHref } from "@/lib/format";
+import { formatMoney, formatPct, isUrl, urlHref } from "@/lib/format";
+import CampoNumero from "@/components/CampoNumero";
 
 const OUTROS = "__outros__";
 const campo =
@@ -145,7 +146,7 @@ export default function ItemRow({
           className={campo + " min-w-[120px] resize-none leading-snug"}
         />
       </td>
-      <td className="px-1 py-1 min-w-[110px] align-top">
+      <td className="px-1 py-1 min-w-[64px] align-top">
         <div className="flex items-center gap-1">
           <select
             value={outrosAtivo ? OUTROS : item.fornecedor || ""}
@@ -245,47 +246,47 @@ export default function ItemRow({
           />
         )}
       </td>
-      <td className="px-1 py-1 align-top">
+      <td className="px-1 py-1 align-top min-w-[58px]">
         <input
           type="number"
           step="1"
           value={item.quantidade}
           onFocus={selecionarTudo}
           onChange={(e) => set("quantidade", e.target.value)}
-          className={campo + " w-12 text-center"}
+          className={campo + " text-center"}
         />
       </td>
-      <td className="px-1 py-1 align-top">
+      <td className="px-1 py-1 align-top min-w-[52px]">
         <input
           type="number"
           step="0.5"
           value={item.custoUnit}
           onFocus={selecionarTudo}
           onChange={(e) => set("custoUnit", e.target.value)}
-          className={campo + " w-16 text-center"}
+          className={campo + " text-center"}
         />
         <div className="text-[9px] text-slate-500 mt-0.5 whitespace-nowrap">
-          Total: {formatMoney(r.custoTotal)}
+          {formatMoney(r.custoTotal)}
         </div>
       </td>
-      <td className="px-1 py-1 align-top">
+      <td className="px-1 py-1 align-top min-w-[52px]">
         <input
           type="number"
           step="10"
           value={item.frete}
           onFocus={selecionarTudo}
           onChange={(e) => set("frete", e.target.value)}
-          className={campo + " w-16 text-center"}
+          className={campo + " text-center"}
         />
       </td>
-      <td className="px-1 py-1 align-top">
+      <td className="px-1 py-1 align-top min-w-[56px]">
         <input
           type="number"
           step="1"
           value={item.comissaoPct}
           onFocus={selecionarTudo}
           onChange={(e) => set("comissaoPct", e.target.value)}
-          className={campo + " w-12 text-center"}
+          className={campo + " text-center"}
         />
         <div
           className={
@@ -297,50 +298,42 @@ export default function ItemRow({
           {comissaoBaixa && " (< 150)"}
         </div>
       </td>
-      <td className="px-1 py-1 align-top">
+      <td className="px-1 py-1 align-top min-w-[56px]">
         <input
           type="number"
           step="1"
           value={item.impostoPct}
           onFocus={selecionarTudo}
           onChange={(e) => set("impostoPct", e.target.value)}
-          className={campo + " w-12 text-center"}
+          className={campo + " text-center"}
         />
         <div className="text-[9px] text-slate-500 mt-0.5 whitespace-nowrap">
           {formatMoney(r.impostoValor)}
         </div>
       </td>
       <td className="px-1 py-1 align-top min-w-[84px]">
-        <input
-          type="number"
-          step="0.01"
+        <CampoNumero
           value={Math.round(r.precoUnitario * 10000) / 10000}
-          onFocus={selecionarTudo}
-          onChange={(e) => setPrecoUnitarioDesejado(e.target.value)}
+          casasDecimais={4}
+          onChange={setPrecoUnitarioDesejado}
           title="Forçar o preço unitário recalcula a comissão % (custo, frete e imposto ficam travados)"
           className={campo + " text-center"}
         />
       </td>
-      <td className="px-1 py-1 align-top min-w-[100px]">
-        <input
-          type="number"
-          step="1"
+      <td className="px-1 py-1 align-top min-w-[104px]">
+        <CampoNumero
           value={Math.round(r.precoVendaTotal * 100) / 100}
-          onFocus={selecionarTudo}
-          onChange={(e) => setPrecoTotalDesejado(e.target.value)}
+          onChange={setPrecoTotalDesejado}
           title="Forçar o total recalcula a comissão % (custo, frete e imposto ficam travados)"
           className={campo + " text-center"}
         />
       </td>
-      <td className="px-1 py-1 text-center align-top" style={{ color: cor }}>
-        <input
-          type="number"
-          step="1"
+      <td className="px-1 py-1 text-center align-top min-w-[80px]" style={{ color: cor }}>
+        <CampoNumero
           value={Math.round(r.margem * 100) / 100}
-          onFocus={selecionarTudo}
-          onChange={(e) => setMargemDesejada(e.target.value)}
+          onChange={setMargemDesejada}
           title="Editar a margem direto ajusta a comissão % pra chegar nesse valor"
-          className={campo + " w-16 text-center font-extrabold"}
+          className={campo + " text-center font-extrabold"}
           style={{ color: cor }}
         />
         <div className="text-[9px] font-semibold opacity-80" style={{ color: cor }}>
