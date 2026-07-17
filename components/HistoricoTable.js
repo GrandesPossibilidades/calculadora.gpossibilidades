@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { margemCor, computeItem, computeTotals } from "@/lib/calc";
 import { formatMoney, formatPct } from "@/lib/format";
@@ -39,6 +39,17 @@ export default function HistoricoTable({ orcamentos, erro }) {
   const [menuAberto, setMenuAberto] = useState(null);
   const [linkCopiadoId, setLinkCopiadoId] = useState(null);
   const [carregandoId, setCarregandoId] = useState(null);
+
+  useEffect(() => {
+    if (!menuAberto) return;
+    function aoClicarFora(e) {
+      if (!e.target.closest(`[data-menu-id="${menuAberto}"]`)) {
+        setMenuAberto(null);
+      }
+    }
+    document.addEventListener("mousedown", aoClicarFora);
+    return () => document.removeEventListener("mousedown", aoClicarFora);
+  }, [menuAberto]);
 
   const filtrados = useMemo(() => {
     if (!busca.trim()) return orcamentos;
@@ -243,7 +254,7 @@ export default function HistoricoTable({ orcamentos, erro }) {
                   </div>
                 </a>
 
-                <div className="absolute top-2 right-1 z-10">
+                <div className="absolute top-2 right-1 z-10" data-menu-id={o.id}>
                   <button
                     onClick={() => setMenuAberto(menuAberto === o.id ? null : o.id)}
                     aria-label="Mais opções"
