@@ -83,6 +83,7 @@ export default async function OrcamentoPage({ params }) {
     prazoEntrega: orcamento.prazo_entrega,
     condicoesPagamento: orcamento.condicoes_pagamento,
     aprovado: orcamento.aprovado,
+    enviado: orcamento.enviado,
     empresa: orcamento.empresa,
     itens: (itensDb || []).map(mapItem),
   };

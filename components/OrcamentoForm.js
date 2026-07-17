@@ -35,6 +35,8 @@ export default function OrcamentoForm({ inicial }) {
   const [condicoesPagamento, setCondicoesPagamento] = useState(inicial?.condicoesPagamento ?? "");
   const [aprovado, setAprovado] = useState(inicial?.aprovado ?? false);
   const [alternandoAprovado, setAlternandoAprovado] = useState(false);
+  const [enviado, setEnviado] = useState(inicial?.enviado ?? false);
+  const [alternandoEnviado, setAlternandoEnviado] = useState(false);
   const [emailUsuario, setEmailUsuario] = useState(null);
   const souGabriel = emailUsuario === "gp@gpossibilidades.com.br";
   const [empresa, setEmpresa] = useState(inicial?.empresa ?? EMPRESA_PADRAO);
@@ -135,6 +137,15 @@ export default function OrcamentoForm({ inicial }) {
     if (!error) setAprovado(novoValor);
   }
 
+  async function alternarEnviado() {
+    if (!isEdit) return;
+    setAlternandoEnviado(true);
+    const novoValor = !enviado;
+    const { error } = await supabase.from("orcamentos").update({ enviado: novoValor }).eq("id", inicial.id);
+    setAlternandoEnviado(false);
+    if (!error) setEnviado(novoValor);
+  }
+
   function mensagemErro(error) {
     if (error?.message?.includes("orcamentos_numero_unique")) {
       return "Esse número de orçamento já está em uso. Escolha outro ou deixe o campo vazio para gerar automaticamente.";
@@ -162,6 +173,7 @@ export default function OrcamentoForm({ inicial }) {
       prazo_entrega: prazoEntrega.trim() || null,
       condicoes_pagamento: condicoesPagamento.trim() || null,
       aprovado,
+      enviado,
       empresa,
       custo_total: totals.custoTotal,
       preco_total: totals.precoTotal,
@@ -316,6 +328,18 @@ export default function OrcamentoForm({ inicial }) {
                 {aprovado ? "✓ Aprovado para envio" : "Aguardando aprovação"}
               </span>
             )}
+            <button
+              onClick={alternarEnviado}
+              disabled={alternandoEnviado}
+              className={
+                "text-xs font-bold rounded-md px-3 py-1.5 disabled:opacity-60 " +
+                (enviado
+                  ? "bg-azul text-white hover:opacity-90"
+                  : "border border-slate-300 text-slate-600 hover:bg-white")
+              }
+            >
+              {alternandoEnviado ? "..." : enviado ? "✓ Enviado para o cliente" : "Marcar como enviado"}
+            </button>
             <button
               onClick={copiarLink}
               className="text-xs font-bold border border-azul text-azul rounded-md px-3 py-1.5 hover:bg-white"

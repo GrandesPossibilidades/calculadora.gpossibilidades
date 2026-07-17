@@ -235,6 +235,11 @@ export default function HistoricoTable({ orcamentos, erro }) {
                           ✓ Aprovado
                         </span>
                       )}
+                      {o.enviado && (
+                        <span className="ml-2 text-[10px] font-bold text-white bg-azul rounded-full px-2 py-0.5 align-middle">
+                          ✓ Enviado
+                        </span>
+                      )}
                     </span>
                     <span className="text-xs text-slate-400 whitespace-nowrap">
                       {new Date(o.criado_em).toLocaleDateString("pt-BR")} · {o.empresa} · {o.criado_por}
