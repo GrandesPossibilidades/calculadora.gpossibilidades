@@ -35,6 +35,8 @@ export default function OrcamentoForm({ inicial }) {
   const [condicoesPagamento, setCondicoesPagamento] = useState(inicial?.condicoesPagamento ?? "");
   const [aprovado, setAprovado] = useState(inicial?.aprovado ?? false);
   const [alternandoAprovado, setAlternandoAprovado] = useState(false);
+  const [emailUsuario, setEmailUsuario] = useState(null);
+  const souGabriel = emailUsuario === "gp@gpossibilidades.com.br";
   const [empresa, setEmpresa] = useState(inicial?.empresa ?? EMPRESA_PADRAO);
   const [defComissao, setDefComissao] = useState(20);
   const [defImposto, setDefImposto] = useState(15);
@@ -59,6 +61,10 @@ export default function OrcamentoForm({ inicial }) {
       .then(({ data }) => {
         if (data?.length) setFornecedores(data.map((f) => f.nome));
       });
+  }, [supabase]);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setEmailUsuario(data.user?.email || null));
   }, [supabase]);
 
   async function aoCadastrarFornecedor(nome) {
@@ -121,7 +127,7 @@ export default function OrcamentoForm({ inicial }) {
   }
 
   async function alternarAprovado() {
-    if (!isEdit) return;
+    if (!isEdit || !souGabriel) return;
     setAlternandoAprovado(true);
     const novoValor = !aprovado;
     const { error } = await supabase.from("orcamentos").update({ aprovado: novoValor }).eq("id", inicial.id);
@@ -287,18 +293,29 @@ export default function OrcamentoForm({ inicial }) {
         >
           <span className="text-sm font-bold text-azul">Orçamento nº {inicial.numero}</span>
           <div className="flex flex-wrap gap-2">
-            <button
-              onClick={alternarAprovado}
-              disabled={alternandoAprovado}
-              className={
-                "text-xs font-bold rounded-md px-3 py-1.5 disabled:opacity-60 " +
-                (aprovado
-                  ? "bg-verde text-white hover:opacity-90"
-                  : "border border-slate-300 text-slate-600 hover:bg-white")
-              }
-            >
-              {alternandoAprovado ? "..." : aprovado ? "✓ Aprovado para envio" : "Aprovar para envio"}
-            </button>
+            {souGabriel ? (
+              <button
+                onClick={alternarAprovado}
+                disabled={alternandoAprovado}
+                className={
+                  "text-xs font-bold rounded-md px-3 py-1.5 disabled:opacity-60 " +
+                  (aprovado
+                    ? "bg-verde text-white hover:opacity-90"
+                    : "border border-slate-300 text-slate-600 hover:bg-white")
+                }
+              >
+                {alternandoAprovado ? "..." : aprovado ? "✓ Aprovado para envio" : "Aprovar para envio"}
+              </button>
+            ) : (
+              <span
+                className={
+                  "text-xs font-bold rounded-md px-3 py-1.5 " +
+                  (aprovado ? "bg-verde text-white" : "border border-slate-300 text-slate-500")
+                }
+              >
+                {aprovado ? "✓ Aprovado para envio" : "Aguardando aprovação"}
+              </span>
+            )}
             <button
               onClick={copiarLink}
               className="text-xs font-bold border border-azul text-azul rounded-md px-3 py-1.5 hover:bg-white"
