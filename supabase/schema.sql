@@ -16,7 +16,8 @@ create table if not exists public.orcamentos (
   preco_total numeric not null default 0,
   margem_total numeric not null default 0,
   margem_pct numeric not null default 0,
-  criado_por text not null
+  criado_por text not null,
+  aprovado boolean not null default false
 );
 
 create table if not exists public.orcamento_itens (

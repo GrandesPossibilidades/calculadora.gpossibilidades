@@ -33,6 +33,8 @@ export default function OrcamentoForm({ inicial }) {
   const [observacao, setObservacao] = useState(inicial?.observacao ?? "");
   const [prazoEntrega, setPrazoEntrega] = useState(inicial?.prazoEntrega ?? "");
   const [condicoesPagamento, setCondicoesPagamento] = useState(inicial?.condicoesPagamento ?? "");
+  const [aprovado, setAprovado] = useState(inicial?.aprovado ?? false);
+  const [alternandoAprovado, setAlternandoAprovado] = useState(false);
   const [empresa, setEmpresa] = useState(inicial?.empresa ?? EMPRESA_PADRAO);
   const [defComissao, setDefComissao] = useState(20);
   const [defImposto, setDefImposto] = useState(15);
@@ -118,6 +120,15 @@ export default function OrcamentoForm({ inicial }) {
     });
   }
 
+  async function alternarAprovado() {
+    if (!isEdit) return;
+    setAlternandoAprovado(true);
+    const novoValor = !aprovado;
+    const { error } = await supabase.from("orcamentos").update({ aprovado: novoValor }).eq("id", inicial.id);
+    setAlternandoAprovado(false);
+    if (!error) setAprovado(novoValor);
+  }
+
   function mensagemErro(error) {
     if (error?.message?.includes("orcamentos_numero_unique")) {
       return "Esse número de orçamento já está em uso. Escolha outro ou deixe o campo vazio para gerar automaticamente.";
@@ -144,6 +155,7 @@ export default function OrcamentoForm({ inicial }) {
       observacao: observacao.trim() || null,
       prazo_entrega: prazoEntrega.trim() || null,
       condicoes_pagamento: condicoesPagamento.trim() || null,
+      aprovado,
       empresa,
       custo_total: totals.custoTotal,
       preco_total: totals.precoTotal,
@@ -267,14 +279,33 @@ export default function OrcamentoForm({ inicial }) {
   return (
     <div className="max-w-5xl mx-auto p-3 sm:p-4 flex flex-col gap-4">
       {isEdit && (
-        <div className="flex flex-wrap items-center justify-between gap-2 bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5">
+        <div
+          className={
+            "flex flex-wrap items-center justify-between gap-2 rounded-xl px-4 py-2.5 border " +
+            (aprovado ? "bg-green-50 border-verde" : "bg-blue-50 border-blue-100")
+          }
+        >
           <span className="text-sm font-bold text-azul">Orçamento nº {inicial.numero}</span>
-          <button
-            onClick={copiarLink}
-            className="text-xs font-bold border border-azul text-azul rounded-md px-3 py-1.5 hover:bg-white"
-          >
-            {linkCopiado ? "Link copiado!" : "Copiar link para compartilhar"}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={alternarAprovado}
+              disabled={alternandoAprovado}
+              className={
+                "text-xs font-bold rounded-md px-3 py-1.5 disabled:opacity-60 " +
+                (aprovado
+                  ? "bg-verde text-white hover:opacity-90"
+                  : "border border-slate-300 text-slate-600 hover:bg-white")
+              }
+            >
+              {alternandoAprovado ? "..." : aprovado ? "✓ Aprovado para envio" : "Aprovar para envio"}
+            </button>
+            <button
+              onClick={copiarLink}
+              className="text-xs font-bold border border-azul text-azul rounded-md px-3 py-1.5 hover:bg-white"
+            >
+              {linkCopiado ? "Link copiado!" : "Copiar link para compartilhar"}
+            </button>
+          </div>
         </div>
       )}
 

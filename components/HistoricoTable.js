@@ -211,11 +211,19 @@ export default function HistoricoTable({ orcamentos, erro }) {
               <div key={o.id} className="relative">
                 <a
                   href={`/orcamento/${o.id}`}
-                  className="block border border-slate-200 rounded-xl p-3.5 pr-10 hover:border-azul transition-colors"
+                  className={
+                    "block border rounded-xl p-3.5 pr-10 transition-colors " +
+                    (o.aprovado ? "border-verde bg-green-50 hover:border-verde" : "border-slate-200 hover:border-azul")
+                  }
                 >
                   <div className="flex justify-between items-baseline gap-2 pr-2">
                     <span className="font-bold text-azul">
                       #{o.numero} — {o.cliente || "(sem nome)"}
+                      {o.aprovado && (
+                        <span className="ml-2 text-[10px] font-bold text-white bg-verde rounded-full px-2 py-0.5 align-middle">
+                          ✓ Aprovado
+                        </span>
+                      )}
                     </span>
                     <span className="text-xs text-slate-400 whitespace-nowrap">
                       {new Date(o.criado_em).toLocaleDateString("pt-BR")} · {o.empresa} · {o.criado_por}
