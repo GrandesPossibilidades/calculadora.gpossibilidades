@@ -10,6 +10,8 @@ function mapItem(row) {
     custoUnit: Number(row.custo_unit),
     quantidade: Number(row.quantidade),
     frete: Number(row.frete),
+    outrosCustos: Number(row.outros_custos),
+    notasInternas: row.notas_internas || "",
     comissaoPct: Number(row.comissao_pct),
     impostoPct: Number(row.imposto_pct),
   };

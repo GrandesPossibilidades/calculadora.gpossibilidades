@@ -19,6 +19,8 @@ const novoItem = (comissaoPct, impostoPct) => ({
   custoUnit: 0,
   quantidade: 1,
   frete: 0,
+  outrosCustos: 0,
+  notasInternas: "",
   comissaoPct,
   impostoPct,
 });
@@ -231,6 +233,8 @@ export default function OrcamentoForm({ inicial }) {
         custo_unit: it.custoUnit,
         quantidade: it.quantidade,
         frete: it.frete,
+        outros_custos: it.outrosCustos || 0,
+        notas_internas: it.notasInternas?.trim() || null,
         comissao_pct: it.comissaoPct,
         imposto_pct: it.impostoPct,
         preco_unit: r.precoUnitario,
@@ -512,6 +516,10 @@ export default function OrcamentoForm({ inicial }) {
             <span className="font-semibold">{formatMoney(totals.freteTotal)}</span>
           </div>
           <div className="flex justify-between">
+            <span className="text-slate-500">Custo total de outros custos</span>
+            <span className="font-semibold">{formatMoney(totals.outrosCustosTotal)}</span>
+          </div>
+          <div className="flex justify-between">
             <span className="text-slate-500">Custo total do imposto</span>
             <span className="font-semibold">{formatMoney(totals.impostoTotal)}</span>
           </div>
@@ -526,7 +534,7 @@ export default function OrcamentoForm({ inicial }) {
             margem={totals.margemTotal}
             margemPct={totals.margemPct}
             titulo="Margem líquida (lucro real)"
-            descricao={`= ${formatMoney(totals.precoTotal)} − ${formatMoney(totals.custoTotal)} − ${formatMoney(totals.freteTotal)} − ${formatMoney(totals.impostoTotal)}`}
+            descricao={`= ${formatMoney(totals.precoTotal)} − ${formatMoney(totals.custoTotal)} − ${formatMoney(totals.freteTotal)} − ${formatMoney(totals.outrosCustosTotal)} − ${formatMoney(totals.impostoTotal)}`}
           />
         </div>
 

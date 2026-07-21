@@ -110,6 +110,7 @@ export default function OrcamentoPDF({
             <Text style={[styles.th, colNum]}>Qtd</Text>
             {fornecedorMode && <Text style={[styles.th, colNum]}>Custo unit.</Text>}
             {fornecedorMode && <Text style={[styles.th, colNum]}>Frete</Text>}
+            {fornecedorMode && <Text style={[styles.th, colNum]}>Outros</Text>}
             {fornecedorMode && <Text style={[styles.th, colNum]}>Com. %</Text>}
             {fornecedorMode && <Text style={[styles.th, colNum]}>Imp. %</Text>}
             <Text style={[styles.th, colNum]}>Preço unit.</Text>
@@ -121,7 +122,12 @@ export default function OrcamentoPDF({
             const corMargem = margemCor(r.margemPct);
             return (
               <View style={styles.row} key={it.id}>
-                <Text style={[styles.td, colNome]}>{it.nome || "(item)"}</Text>
+                <View style={[styles.td, colNome, { alignItems: "flex-start" }]}>
+                  <Text>{it.nome || "(item)"}</Text>
+                  {fornecedorMode && it.notasInternas ? (
+                    <Text style={{ fontSize: 6.5, color: "#64748B", marginTop: 2 }}>{it.notasInternas}</Text>
+                  ) : null}
+                </View>
                 {fornecedorMode && <Text style={[styles.td, colFornecedor]}>{it.fornecedor || "-"}</Text>}
                 {fornecedorMode && (
                   <View style={[styles.td, colRef]}>
@@ -140,6 +146,7 @@ export default function OrcamentoPDF({
                 <Text style={[styles.td, colNum]}>{it.quantidade}</Text>
                 {fornecedorMode && <Text style={[styles.td, colNum]}>{formatMoney(it.custoUnit)}</Text>}
                 {fornecedorMode && <Text style={[styles.td, colNum]}>{formatMoney(it.frete)}</Text>}
+                {fornecedorMode && <Text style={[styles.td, colNum]}>{formatMoney(it.outrosCustos)}</Text>}
                 {fornecedorMode && <Text style={[styles.td, colNum]}>{it.comissaoPct}%</Text>}
                 {fornecedorMode && <Text style={[styles.td, colNum]}>{it.impostoPct}%</Text>}
                 <Text style={[styles.td, colNum]}>{formatMoneyPreciso(r.precoUnitario)}</Text>

@@ -82,6 +82,8 @@ export default function HistoricoTable({ orcamentos, erro }) {
       custoUnit: Number(row.custo_unit),
       quantidade: Number(row.quantidade),
       frete: Number(row.frete),
+      outrosCustos: Number(row.outros_custos),
+      notasInternas: row.notas_internas || "",
       comissaoPct: Number(row.comissao_pct),
       impostoPct: Number(row.imposto_pct),
     }));
@@ -171,6 +173,8 @@ export default function HistoricoTable({ orcamentos, erro }) {
           custo_unit: it.custoUnit,
           quantidade: it.quantidade,
           frete: it.frete,
+          outros_custos: it.outrosCustos || 0,
+          notas_internas: it.notasInternas?.trim() || null,
           comissao_pct: it.comissaoPct,
           imposto_pct: it.impostoPct,
           preco_unit: r.precoUnitario,

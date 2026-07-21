@@ -32,6 +32,8 @@ create table if not exists public.orcamento_itens (
   custo_unit numeric not null default 0,
   quantidade numeric not null default 1,
   frete numeric not null default 0,
+  outros_custos numeric not null default 0,
+  notas_internas text,
   comissao_pct numeric not null default 0,
   imposto_pct numeric not null default 15,
   preco_unit numeric not null default 0,

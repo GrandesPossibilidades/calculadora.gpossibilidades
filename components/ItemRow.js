@@ -41,8 +41,13 @@ export default function ItemRow({
   const [popoverPos, setPopoverPos] = useState(null);
   const [novaRef, setNovaRef] = useState("");
 
+  const custoIconRef = useRef(null);
+  const [custoAberto, setCustoAberto] = useState(false);
+  const [custoPinado, setCustoPinado] = useState(false);
+  const [custoPopoverPos, setCustoPopoverPos] = useState(null);
+
   function set(field, value) {
-    const isTexto = field === "nome" || field === "fornecedor";
+    const isTexto = field === "nome" || field === "fornecedor" || field === "notasInternas";
     onChange({ ...item, [field]: isTexto ? value : parseFloat(value) || 0 });
   }
 
@@ -80,7 +85,7 @@ export default function ItemRow({
   // sem mexer em custo, frete ou imposto.
   function setMargemDesejada(valor) {
     const novaMargem = parseFloat(valor) || 0;
-    const base = (item.custoUnit || 0) * (item.quantidade || 0) + (item.frete || 0);
+    const base = (item.custoUnit || 0) * (item.quantidade || 0) + (item.frete || 0) + (item.outrosCustos || 0);
     const novaComissaoPct = base > 0 ? Math.round((novaMargem / base) * 100 * 10000) / 10000 : 0;
     onChange({ ...item, comissaoPct: novaComissaoPct });
   }
@@ -90,7 +95,7 @@ export default function ItemRow({
   // exatamente no preço forçado (imposto em % nunca muda, só o R$ dele, já
   // que a base onde ele incide muda).
   function resolverComissaoPorPrecoTotal(precoVendaTotalDesejado) {
-    const base = (item.custoUnit || 0) * (item.quantidade || 0) + (item.frete || 0);
+    const base = (item.custoUnit || 0) * (item.quantidade || 0) + (item.frete || 0) + (item.outrosCustos || 0);
     if (base <= 0) return 0;
     const aposComissao = precoVendaTotalDesejado / (1 + (item.impostoPct || 0) / 100);
     return Math.round((aposComissao / base - 1) * 100 * 10000) / 10000;
@@ -130,6 +135,31 @@ export default function ItemRow({
     if (novoPin) atualizarPosicaoPopover();
     setRefPinada(novoPin);
     setRefAberta(novoPin);
+  }
+
+  function atualizarPosicaoCustoPopover() {
+    if (custoIconRef.current) {
+      const rect = custoIconRef.current.getBoundingClientRect();
+      setCustoPopoverPos({ top: rect.bottom + 4, left: rect.left });
+    }
+  }
+
+  function abrirCustoPopover() {
+    if (!custoPinado) {
+      atualizarPosicaoCustoPopover();
+      setCustoAberto(true);
+    }
+  }
+
+  function fecharCustoPopover() {
+    if (!custoPinado) setCustoAberto(false);
+  }
+
+  function alternarCustoPin() {
+    const novoPin = !custoPinado;
+    if (novoPin) atualizarPosicaoCustoPopover();
+    setCustoPinado(novoPin);
+    setCustoAberto(novoPin);
   }
 
   return (
@@ -269,15 +299,69 @@ export default function ItemRow({
           {formatMoney(r.custoTotal)}
         </div>
       </td>
-      <td className="px-1 py-1 align-top min-w-[52px]">
-        <input
-          type="number"
-          step="10"
-          value={item.frete}
-          onFocus={selecionarTudo}
-          onChange={(e) => set("frete", e.target.value)}
-          className={campo + " text-center"}
-        />
+      <td className="px-1 py-1 align-top min-w-[68px]">
+        <div className="flex items-center gap-1">
+          <input
+            type="number"
+            step="10"
+            value={item.frete}
+            onFocus={selecionarTudo}
+            onChange={(e) => set("frete", e.target.value)}
+            className={campo + " text-center"}
+          />
+          <div className="relative shrink-0" onMouseEnter={abrirCustoPopover} onMouseLeave={fecharCustoPopover}>
+            <button
+              ref={custoIconRef}
+              type="button"
+              onClick={alternarCustoPin}
+              title="Outros custos e notas internas (uso interno, nunca aparece pro cliente)"
+              className={
+                "w-5 h-5 rounded text-[10px] leading-none border " +
+                (item.outrosCustos > 0 || item.notasInternas
+                  ? "bg-amarelo/20 border-amarelo text-amarelo font-bold"
+                  : "border-slate-300 text-slate-400")
+              }
+            >
+              $
+            </button>
+
+            {custoAberto &&
+              custoPopoverPos &&
+              createPortal(
+                <div
+                  className="fixed z-50 w-60 bg-white border border-slate-200 rounded-lg shadow-lg p-2 text-left normal-case"
+                  style={{ top: custoPopoverPos.top, left: custoPopoverPos.left }}
+                  onMouseEnter={() => setCustoAberto(true)}
+                  onMouseLeave={fecharCustoPopover}
+                >
+                  <label className="text-[10px] font-bold text-slate-500 block mb-0.5">
+                    Outros custos (R$)
+                  </label>
+                  <CampoNumero
+                    value={item.outrosCustos || 0}
+                    onChange={(v) => set("outrosCustos", v)}
+                    className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs font-semibold focus:outline-none focus:border-azul mb-2"
+                  />
+                  <label className="text-[10px] font-bold text-slate-500 block mb-0.5">
+                    Notas internas — nunca aparece pro cliente
+                  </label>
+                  <textarea
+                    value={item.notasInternas || ""}
+                    onChange={(e) => set("notasInternas", e.target.value)}
+                    rows={3}
+                    placeholder="Ex: placa de peça R$120, bancagem R$80..."
+                    className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs focus:outline-none focus:border-azul resize-none"
+                  />
+                </div>,
+                document.body
+              )}
+          </div>
+        </div>
+        {item.outrosCustos > 0 && (
+          <div className="text-[9px] text-slate-500 mt-0.5 whitespace-nowrap">
+            +{formatMoney(item.outrosCustos)}
+          </div>
+        )}
       </td>
       <td className="px-1 py-1 align-top min-w-[56px]">
         <input
