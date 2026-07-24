@@ -4,15 +4,17 @@
   --background: #eef2f7;
   --foreground: #1b2a41;
   --color-azul: #1b3a6b;
-  --color-verde: #1d6a3a;
-  --color-amarelo: #c4820e;
-  --color-vermelho: #9b2c22;
+  --color-azul-2: #1f4785;
+  --color-verde: #12704a;
+  --color-amarelo: #b3760a;
+  --color-vermelho: #b3352a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-azul: var(--color-azul);
+  --color-azul-2: var(--color-azul-2);
   --color-verde: var(--color-verde);
   --color-amarelo: var(--color-amarelo);
   --color-vermelho: var(--color-vermelho);

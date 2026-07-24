@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { margemCor, computeItem, computeTotals } from "@/lib/calc";
+import { margemCores, computeItem, computeTotals } from "@/lib/calc";
 import { formatMoney, formatPct } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 import { EMPRESAS } from "@/lib/empresas";
@@ -192,22 +192,22 @@ export default function HistoricoTable({ orcamentos, erro }) {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-4">
-      <h2 className="text-xs font-bold uppercase tracking-wide text-azul border-b-2 border-slate-100 pb-1.5 mb-3">
+    <div className="bg-white rounded-2xl shadow-[0_1px_2px_rgba(15,32,64,.05)] border border-[#e3e9f2] p-4">
+      <h2 className="text-[11px] font-extrabold uppercase tracking-wide text-azul border-b-2 border-slate-100 pb-2 mb-3">
         Histórico de orçamentos
       </h2>
 
-      <div className="flex flex-col sm:flex-row gap-2 mb-4">
+      <div className="flex flex-wrap gap-2.5 mb-3.5">
         <input
           type="text"
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           placeholder="Buscar por cliente..."
-          className="flex-1 border border-slate-300 rounded-lg px-3 py-2 font-semibold focus:outline-none focus:border-azul"
+          className="flex-1 min-w-[200px] border-[1.5px] border-slate-300 rounded-[10px] px-3 py-3 text-[15px] font-semibold focus:outline-none focus:border-azul"
         />
         <button
           onClick={exportarCSV}
-          className="text-sm font-bold border border-azul text-azul rounded-lg px-4 py-2 hover:bg-blue-50"
+          className="text-[13px] font-extrabold border-[1.5px] border-azul text-azul bg-white rounded-[10px] px-4.5 py-3 hover:bg-blue-50"
         >
           Exportar CSV
         </button>
@@ -220,27 +220,29 @@ export default function HistoricoTable({ orcamentos, erro }) {
       ) : (
         <div className="flex flex-col gap-2.5">
           {filtrados.map((o) => {
-            const cor = margemCor(o.margem_pct);
+            const cor = margemCores(o.margem_pct);
             const carregando = carregandoId === o.id;
             return (
               <div key={o.id} className="relative">
                 <a
                   href={`/orcamento/${o.id}`}
-                  className={
-                    "block border rounded-xl p-3.5 pr-10 transition-colors " +
-                    (o.aprovado ? "border-verde bg-green-50 hover:border-verde" : "border-slate-200 hover:border-azul")
-                  }
+                  className="block border rounded-2xl p-3.5 pr-10 transition-colors hover:border-azul"
+                  style={{
+                    borderLeft: `5px solid ${cor.solid}`,
+                    borderColor: o.aprovado ? "#b7e0c7" : "#e3e9f2",
+                    background: o.aprovado ? "#f2fbf5" : "#fff",
+                  }}
                 >
-                  <div className="flex justify-between items-baseline gap-2 pr-2">
-                    <span className="font-bold text-azul">
+                  <div className="flex flex-wrap justify-between items-baseline gap-2 pr-2">
+                    <span className="text-[15px] font-extrabold text-azul">
                       #{o.numero} — {o.cliente || "(sem nome)"}
                       {o.aprovado && (
-                        <span className="ml-2 text-[10px] font-bold text-white bg-verde rounded-full px-2 py-0.5 align-middle">
+                        <span className="ml-1.5 text-[10px] font-extrabold text-white bg-verde rounded-full px-2.5 py-0.5 align-middle">
                           ✓ Aprovado
                         </span>
                       )}
                       {o.enviado && (
-                        <span className="ml-2 text-[10px] font-bold text-white bg-azul rounded-full px-2 py-0.5 align-middle">
+                        <span className="ml-1.5 text-[10px] font-extrabold text-white bg-azul rounded-full px-2.5 py-0.5 align-middle">
                           ✓ Enviado
                         </span>
                       )}
@@ -250,15 +252,18 @@ export default function HistoricoTable({ orcamentos, erro }) {
                     </span>
                   </div>
                   {o.observacao && <div className="text-xs text-slate-500 mt-1">{o.observacao}</div>}
-                  <div className="flex flex-wrap gap-4 text-sm mt-2">
-                    <span>
-                      Custo: <b>{formatMoney(o.custo_total)}</b>
+                  <div className="flex flex-wrap items-center gap-3.5 text-[13px] mt-2.5">
+                    <span className="text-slate-500">
+                      Custo <b className="text-[#1b2a41]">{formatMoney(o.custo_total)}</b>
                     </span>
-                    <span>
-                      Total: <b>{formatMoney(o.preco_total)}</b>
+                    <span className="text-slate-500">
+                      Total <b className="text-azul">{formatMoney(o.preco_total)}</b>
                     </span>
-                    <span style={{ color: cor }}>
-                      Margem: <b>{formatMoney(o.margem_total)} ({formatPct(o.margem_pct)})</b>
+                    <span
+                      className="font-extrabold rounded-full px-3 py-0.5"
+                      style={{ color: cor.fg, background: cor.bg, border: `1px solid ${cor.bd}` }}
+                    >
+                      Margem {formatMoney(o.margem_total)} · {formatPct(o.margem_pct)}
                     </span>
                   </div>
                 </a>

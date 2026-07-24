@@ -1,12 +1,10 @@
-import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { computeItem, margemCor, COMISSAO_MINIMA } from "@/lib/calc";
 import { formatMoney, formatPct, isUrl, urlHref } from "@/lib/format";
 import CampoNumero from "@/components/CampoNumero";
+import useItemRow, { OUTROS } from "@/lib/useItemRow";
 
-const OUTROS = "__outros__";
 const campo =
-  "w-full border border-slate-300 rounded px-1 py-1 text-xs font-semibold focus:outline-none focus:border-azul";
+  "w-full border border-[#d3dbe6] rounded-[7px] px-2 py-1.5 text-[13px] font-semibold text-[#1b2a41] focus:outline-none focus:border-azul";
 
 function selecionarTudo(e) {
   e.target.select();
@@ -27,144 +25,39 @@ export default function ItemRow({
   fornecedores,
   aoCadastrarFornecedor,
 }) {
-  const r = computeItem(item);
-  const cor = margemCor(r.margemPct);
-  const comissaoBaixa = r.comissaoValor < COMISSAO_MINIMA;
-  const referencias = item.referencias || [];
-  const iconRef = useRef(null);
-
-  const [outrosAtivo, setOutrosAtivo] = useState(
-    Boolean(item.fornecedor) && !fornecedores.includes(item.fornecedor)
-  );
-  const [refAberta, setRefAberta] = useState(false);
-  const [refPinada, setRefPinada] = useState(false);
-  const [popoverPos, setPopoverPos] = useState(null);
-  const [novaRef, setNovaRef] = useState("");
-
-  const custoIconRef = useRef(null);
-  const [custoAberto, setCustoAberto] = useState(false);
-  const [custoPinado, setCustoPinado] = useState(false);
-  const [custoPopoverPos, setCustoPopoverPos] = useState(null);
-
-  function set(field, value) {
-    const isTexto = field === "nome" || field === "fornecedor" || field === "notasInternas";
-    onChange({ ...item, [field]: isTexto ? value : parseFloat(value) || 0 });
-  }
-
-  function selecionarFornecedor(valor) {
-    if (valor === OUTROS) {
-      setOutrosAtivo(true);
-      set("fornecedor", "");
-    } else {
-      setOutrosAtivo(false);
-      set("fornecedor", valor);
-    }
-  }
-
-  function confirmarNovoFornecedor(e) {
-    const nome = e.target.value.trim();
-    if (nome) aoCadastrarFornecedor(nome);
-  }
-
-  function adicionarReferencia() {
-    const v = novaRef.trim();
-    if (!v) return;
-    onChange({ ...item, referencias: [...referencias, v] });
-    setNovaRef("");
-    setRefAberta(false);
-    setRefPinada(false);
-  }
-
-  function removerReferencia(i) {
-    onChange({ ...item, referencias: referencias.filter((_, idx) => idx !== i) });
-  }
-
-  // Margem líquida do item == valor da comissão (é assim que a cascata é definida:
-  // tudo que sobra depois de custo/frete/imposto é exatamente a comissão da GP).
-  // Editar a margem direto resolve a comissão % necessária pra chegar nesse valor,
-  // sem mexer em custo, frete ou imposto.
-  function setMargemDesejada(valor) {
-    const novaMargem = parseFloat(valor) || 0;
-    const base = (item.custoUnit || 0) * (item.quantidade || 0) + (item.frete || 0) + (item.outrosCustos || 0);
-    const novaComissaoPct = base > 0 ? Math.round((novaMargem / base) * 100 * 10000) / 10000 : 0;
-    onChange({ ...item, comissaoPct: novaComissaoPct });
-  }
-
-  // Forçar o preço unitário ou o total de venda: custo, frete e % de imposto
-  // ficam travados como estão, e a comissão % é recalculada pra fechar
-  // exatamente no preço forçado (imposto em % nunca muda, só o R$ dele, já
-  // que a base onde ele incide muda).
-  function resolverComissaoPorPrecoTotal(precoVendaTotalDesejado) {
-    const base = (item.custoUnit || 0) * (item.quantidade || 0) + (item.frete || 0) + (item.outrosCustos || 0);
-    if (base <= 0) return 0;
-    const aposComissao = precoVendaTotalDesejado / (1 + (item.impostoPct || 0) / 100);
-    return Math.round((aposComissao / base - 1) * 100 * 10000) / 10000;
-  }
-
-  function setPrecoUnitarioDesejado(valor) {
-    const novoUnitario = parseFloat(valor) || 0;
-    const novoTotal = novoUnitario * (item.quantidade || 0);
-    onChange({ ...item, comissaoPct: resolverComissaoPorPrecoTotal(novoTotal) });
-  }
-
-  function setPrecoTotalDesejado(valor) {
-    const novoTotal = parseFloat(valor) || 0;
-    onChange({ ...item, comissaoPct: resolverComissaoPorPrecoTotal(novoTotal) });
-  }
-
-  function atualizarPosicaoPopover() {
-    if (iconRef.current) {
-      const rect = iconRef.current.getBoundingClientRect();
-      setPopoverPos({ top: rect.bottom + 4, left: rect.left });
-    }
-  }
-
-  function abrirPopover() {
-    if (!refPinada) {
-      atualizarPosicaoPopover();
-      setRefAberta(true);
-    }
-  }
-
-  function fecharPopover() {
-    if (!refPinada) setRefAberta(false);
-  }
-
-  function alternarPin() {
-    const novoPin = !refPinada;
-    if (novoPin) atualizarPosicaoPopover();
-    setRefPinada(novoPin);
-    setRefAberta(novoPin);
-  }
-
-  function atualizarPosicaoCustoPopover() {
-    if (custoIconRef.current) {
-      const rect = custoIconRef.current.getBoundingClientRect();
-      setCustoPopoverPos({ top: rect.bottom + 4, left: rect.left });
-    }
-  }
-
-  function abrirCustoPopover() {
-    if (!custoPinado) {
-      atualizarPosicaoCustoPopover();
-      setCustoAberto(true);
-    }
-  }
-
-  function fecharCustoPopover() {
-    if (!custoPinado) setCustoAberto(false);
-  }
-
-  function alternarCustoPin() {
-    const novoPin = !custoPinado;
-    if (novoPin) atualizarPosicaoCustoPopover();
-    setCustoPinado(novoPin);
-    setCustoAberto(novoPin);
-  }
+  const {
+    r,
+    cor,
+    comissaoBaixa,
+    referencias,
+    outrosAtivo,
+    set,
+    selecionarFornecedor,
+    confirmarNovoFornecedor,
+    novaRef,
+    setNovaRef,
+    adicionarReferencia,
+    removerReferencia,
+    setMargemDesejada,
+    setPrecoUnitarioDesejado,
+    setPrecoTotalDesejado,
+    iconRef,
+    refAberta,
+    popoverPos,
+    abrirPopover,
+    fecharPopover,
+    alternarPin,
+    custoIconRef,
+    custoAberto,
+    custoPopoverPos,
+    abrirCustoPopover,
+    fecharCustoPopover,
+    alternarCustoPin,
+  } = useItemRow({ item, onChange, fornecedores, aoCadastrarFornecedor });
 
   return (
-    <tr className="border-b border-slate-200 align-middle text-xs">
-      <td className="text-left px-1 py-1 min-w-[140px] align-top">
+    <tr className="bg-[#fbfcfe] shadow-[0_1px_2px_rgba(15,32,64,.04)] align-middle text-xs">
+      <td className="text-left px-2 py-1.5 min-w-[150px] rounded-l-lg align-top">
         <textarea
           rows={1}
           value={item.nome}
@@ -176,7 +69,7 @@ export default function ItemRow({
           className={campo + " min-w-[120px] resize-none leading-snug"}
         />
       </td>
-      <td className="px-1 py-1 min-w-[64px] align-top">
+      <td className="px-1 py-1.5 min-w-[64px] align-top">
         <div className="flex items-center gap-1">
           <select
             value={outrosAtivo ? OUTROS : item.fornecedor || ""}
@@ -199,10 +92,10 @@ export default function ItemRow({
               onClick={alternarPin}
               title="Referências do fornecedor (link, código...)"
               className={
-                "w-5 h-5 rounded text-[10px] leading-none border " +
+                "w-6 h-6 rounded-md text-[10px] leading-none border " +
                 (referencias.length > 0
-                  ? "bg-amarelo/20 border-amarelo text-amarelo font-bold"
-                  : "border-slate-300 text-slate-400")
+                  ? "bg-amarelo/15 border-amarelo text-amarelo font-bold"
+                  : "border-[#d3dbe6] text-slate-400")
               }
             >
               {referencias.length > 0 ? referencias.length : "✎"}
@@ -212,13 +105,16 @@ export default function ItemRow({
               popoverPos &&
               createPortal(
                 <div
-                  className="fixed z-50 w-56 bg-white border border-slate-200 rounded-lg shadow-lg p-2 text-left normal-case"
+                  className="fixed z-50 w-56 bg-white border border-slate-200 rounded-xl shadow-[0_12px_34px_rgba(15,32,64,.25)] p-3 text-left normal-case"
                   style={{ top: popoverPos.top, left: popoverPos.left }}
-                  onMouseEnter={() => setRefAberta(true)}
+                  onMouseEnter={() => {}}
                   onMouseLeave={fecharPopover}
                 >
+                  <div className="text-[11px] font-extrabold text-azul uppercase tracking-wide mb-2">
+                    Referências do fornecedor
+                  </div>
                   {referencias.length === 0 && (
-                    <p className="text-[10px] text-slate-400 mb-1">Nenhuma referência ainda.</p>
+                    <p className="text-[12px] text-slate-400 mb-1">Nenhuma referência ainda.</p>
                   )}
                   {referencias.map((ref, i) => (
                     <div key={i} className="flex items-center justify-between gap-1 py-0.5">
@@ -243,7 +139,7 @@ export default function ItemRow({
                       </button>
                     </div>
                   ))}
-                  <div className="flex gap-1 mt-1.5">
+                  <div className="flex gap-1.5 mt-2">
                     <input
                       type="text"
                       autoFocus
@@ -251,11 +147,11 @@ export default function ItemRow({
                       onChange={(e) => setNovaRef(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && adicionarReferencia()}
                       placeholder="Nova referência"
-                      className="flex-1 border border-slate-300 rounded px-1.5 py-1 text-xs focus:outline-none focus:border-azul"
+                      className="flex-1 border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-azul"
                     />
                     <button
                       onClick={adicionarReferencia}
-                      className="bg-azul text-white rounded px-2 text-xs font-bold"
+                      className="bg-azul text-white rounded-lg px-2.5 text-xs font-bold"
                     >
                       +
                     </button>
@@ -276,7 +172,7 @@ export default function ItemRow({
           />
         )}
       </td>
-      <td className="px-1 py-1 align-top min-w-[58px]">
+      <td className="px-1 py-1.5 align-top min-w-[52px]">
         <input
           type="number"
           step="1"
@@ -286,7 +182,7 @@ export default function ItemRow({
           className={campo + " text-center"}
         />
       </td>
-      <td className="px-1 py-1 align-top min-w-[52px]">
+      <td className="px-1 py-1.5 align-top min-w-[70px]">
         <input
           type="number"
           step="0.5"
@@ -295,11 +191,11 @@ export default function ItemRow({
           onChange={(e) => set("custoUnit", e.target.value)}
           className={campo + " text-center"}
         />
-        <div className="text-[9px] text-slate-500 mt-0.5 whitespace-nowrap">
+        <div className="text-[10px] text-slate-400 mt-0.5 text-center whitespace-nowrap">
           {formatMoney(r.custoTotal)}
         </div>
       </td>
-      <td className="px-1 py-1 align-top min-w-[68px]">
+      <td className="px-1 py-1.5 align-top min-w-[68px]">
         <div className="flex items-center gap-1">
           <input
             type="number"
@@ -316,10 +212,10 @@ export default function ItemRow({
               onClick={alternarCustoPin}
               title="Outros custos e notas internas (uso interno, nunca aparece pro cliente)"
               className={
-                "w-5 h-5 rounded text-[10px] leading-none border " +
+                "w-6 h-6 rounded-md text-[11px] leading-none border " +
                 (item.outrosCustos > 0 || item.notasInternas
-                  ? "bg-amarelo/20 border-amarelo text-amarelo font-bold"
-                  : "border-slate-300 text-slate-400")
+                  ? "bg-amarelo/15 border-amarelo text-amarelo font-bold"
+                  : "border-[#d3dbe6] text-slate-400")
               }
             >
               $
@@ -329,20 +225,20 @@ export default function ItemRow({
               custoPopoverPos &&
               createPortal(
                 <div
-                  className="fixed z-50 w-60 bg-white border border-slate-200 rounded-lg shadow-lg p-2 text-left normal-case"
+                  className="fixed z-50 w-60 bg-white border border-slate-200 rounded-xl shadow-[0_12px_34px_rgba(15,32,64,.25)] p-3 text-left normal-case"
                   style={{ top: custoPopoverPos.top, left: custoPopoverPos.left }}
-                  onMouseEnter={() => setCustoAberto(true)}
+                  onMouseEnter={() => {}}
                   onMouseLeave={fecharCustoPopover}
                 >
-                  <label className="text-[10px] font-bold text-slate-500 block mb-0.5">
+                  <label className="text-[11px] font-extrabold text-slate-500 block mb-1">
                     Outros custos (R$)
                   </label>
                   <CampoNumero
                     value={item.outrosCustos || 0}
                     onChange={(v) => set("outrosCustos", v)}
-                    className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs font-semibold focus:outline-none focus:border-azul mb-2"
+                    className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-semibold focus:outline-none focus:border-azul mb-2.5"
                   />
-                  <label className="text-[10px] font-bold text-slate-500 block mb-0.5">
+                  <label className="text-[11px] font-extrabold text-slate-500 block mb-1">
                     Notas internas — nunca aparece pro cliente
                   </label>
                   <textarea
@@ -350,7 +246,7 @@ export default function ItemRow({
                     onChange={(e) => set("notasInternas", e.target.value)}
                     rows={3}
                     placeholder="Ex: placa de peça R$120, bancagem R$80..."
-                    className="w-full border border-slate-300 rounded px-1.5 py-1 text-xs focus:outline-none focus:border-azul resize-none"
+                    className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-azul resize-none"
                   />
                 </div>,
                 document.body
@@ -358,12 +254,12 @@ export default function ItemRow({
           </div>
         </div>
         {item.outrosCustos > 0 && (
-          <div className="text-[9px] text-slate-500 mt-0.5 whitespace-nowrap">
+          <div className="text-[10px] text-slate-400 mt-0.5 text-center whitespace-nowrap">
             +{formatMoney(item.outrosCustos)}
           </div>
         )}
       </td>
-      <td className="px-1 py-1 align-top min-w-[56px]">
+      <td className="px-1 py-1.5 align-top min-w-[56px]">
         <input
           type="number"
           step="1"
@@ -374,15 +270,15 @@ export default function ItemRow({
         />
         <div
           className={
-            "text-[9px] mt-0.5 whitespace-nowrap font-semibold " +
-            (comissaoBaixa ? "text-vermelho" : "text-slate-500")
+            "text-[10px] mt-0.5 text-center whitespace-nowrap font-bold " +
+            (comissaoBaixa ? "text-vermelho" : "text-[#1b2a41]")
           }
         >
           {formatMoney(r.comissaoValor)}
           {comissaoBaixa && " (< 150)"}
         </div>
       </td>
-      <td className="px-1 py-1 align-top min-w-[56px]">
+      <td className="px-1 py-1.5 align-top min-w-[56px]">
         <input
           type="number"
           step="1"
@@ -391,11 +287,11 @@ export default function ItemRow({
           onChange={(e) => set("impostoPct", e.target.value)}
           className={campo + " text-center"}
         />
-        <div className="text-[9px] text-slate-500 mt-0.5 whitespace-nowrap">
+        <div className="text-[10px] text-slate-400 mt-0.5 text-center whitespace-nowrap">
           {formatMoney(r.impostoValor)}
         </div>
       </td>
-      <td className="px-1 py-1 align-top min-w-[84px]">
+      <td className="px-1 py-1.5 align-top min-w-[84px]">
         <CampoNumero
           value={Math.round(r.precoUnitario * 10000) / 10000}
           casasDecimais={4}
@@ -404,27 +300,29 @@ export default function ItemRow({
           className={campo + " text-center"}
         />
       </td>
-      <td className="px-1 py-1 align-top min-w-[104px]">
+      <td className="px-1 py-1.5 align-top min-w-[104px]">
         <CampoNumero
           value={Math.round(r.precoVendaTotal * 100) / 100}
           onChange={setPrecoTotalDesejado}
           title="Forçar o total recalcula a comissão % (custo, frete e imposto ficam travados)"
-          className={campo + " text-center"}
+          className={campo + " text-center font-bold text-azul"}
         />
       </td>
-      <td className="px-1 py-1 text-center align-top min-w-[80px]" style={{ color: cor }}>
-        <CampoNumero
-          value={Math.round(r.margem * 100) / 100}
-          onChange={setMargemDesejada}
-          title="Editar a margem direto ajusta a comissão % pra chegar nesse valor"
-          className={campo + " text-center font-extrabold"}
-          style={{ color: cor }}
-        />
-        <div className="text-[9px] font-semibold opacity-80" style={{ color: cor }}>
-          {formatPct(r.margemPct)}
+      <td className="px-1.5 py-1.5 text-center align-top min-w-[90px]">
+        <div className="rounded-lg px-2 py-1.5 text-center" style={{ background: cor.bg, border: `1px solid ${cor.bd}` }}>
+          <CampoNumero
+            value={Math.round(r.margem * 100) / 100}
+            onChange={setMargemDesejada}
+            title="Editar a margem direto ajusta a comissão % pra chegar nesse valor"
+            className="w-full border-none bg-transparent text-[14px] font-black text-center focus:outline-none"
+            style={{ color: cor.fg }}
+          />
+          <div className="text-[11px] font-extrabold" style={{ color: cor.fg }}>
+            {formatPct(r.margemPct)}
+          </div>
         </div>
       </td>
-      <td className="px-1 py-1 text-center whitespace-nowrap align-top">
+      <td className="px-1 py-1.5 text-center whitespace-nowrap align-top rounded-r-lg">
         <button
           onClick={() => onMoverCima?.()}
           disabled={!onMoverCima}

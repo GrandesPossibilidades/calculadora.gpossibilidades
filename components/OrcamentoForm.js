@@ -8,6 +8,7 @@ import { EMPRESAS, EMPRESA_PADRAO } from "@/lib/empresas";
 import { FORNECEDORES_PADRAO } from "@/lib/fornecedores";
 import { createClient } from "@/lib/supabase/client";
 import ItemRow from "@/components/ItemRow";
+import ItemCardMobile from "@/components/ItemCardMobile";
 import MargemBadge from "@/components/MargemBadge";
 
 let uid = 1;
@@ -56,6 +57,7 @@ export default function OrcamentoForm({ inicial }) {
   const [linkCopiado, setLinkCopiado] = useState(false);
   const [gerandoPdf, setGerandoPdf] = useState(null);
   const [fornecedores, setFornecedores] = useState(FORNECEDORES_PADRAO);
+  const [expandedId, setExpandedId] = useState(null);
 
   useEffect(() => {
     supabase
@@ -86,7 +88,9 @@ export default function OrcamentoForm({ inicial }) {
   );
 
   function addItem() {
-    setItens((prev) => [...prev, novoItem(defComissao, defImposto)]);
+    const novo = novoItem(defComissao, defImposto);
+    setItens((prev) => [...prev, novo]);
+    setExpandedId(novo.id);
   }
 
   function aplicarPadraoATodos() {
@@ -299,25 +303,27 @@ export default function OrcamentoForm({ inicial }) {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-3 sm:p-4 flex flex-col gap-4">
+    <div className="max-w-[1040px] mx-auto px-3 py-3.5 pb-24 md:px-5 md:py-[22px] md:pb-10 flex flex-col gap-3.5">
       {isEdit && (
         <div
-          className={
-            "flex flex-wrap items-center justify-between gap-2 rounded-xl px-4 py-2.5 border " +
-            (aprovado ? "bg-green-50 border-verde" : "bg-blue-50 border-blue-100")
-          }
+          className="flex flex-wrap items-center justify-between gap-2.5 rounded-2xl px-4 py-3 border shadow-[0_1px_2px_rgba(15,32,64,.05)]"
+          style={{
+            background: aprovado ? "#f2fbf5" : "#eef3fb",
+            borderColor: aprovado ? "#b7e0c7" : "#d5e0f0",
+            borderLeft: `5px solid ${aprovado ? "#12704a" : "#1b3a6b"}`,
+          }}
         >
-          <span className="text-sm font-bold text-azul">Orçamento nº {inicial.numero}</span>
+          <span className="text-[15px] font-extrabold text-azul">Orçamento nº {inicial.numero}</span>
           <div className="flex flex-wrap gap-2">
             {souGabriel ? (
               <button
                 onClick={alternarAprovado}
                 disabled={alternandoAprovado}
                 className={
-                  "text-xs font-bold rounded-md px-3 py-1.5 disabled:opacity-60 " +
+                  "text-xs font-extrabold rounded-full px-3.5 py-1.5 disabled:opacity-60 " +
                   (aprovado
                     ? "bg-verde text-white hover:opacity-90"
-                    : "border border-slate-300 text-slate-600 hover:bg-white")
+                    : "border border-slate-300 bg-white text-slate-600 hover:bg-slate-50")
                 }
               >
                 {alternandoAprovado ? "..." : aprovado ? "✓ Aprovado para envio" : "Aprovar para envio"}
@@ -325,8 +331,8 @@ export default function OrcamentoForm({ inicial }) {
             ) : (
               <span
                 className={
-                  "text-xs font-bold rounded-md px-3 py-1.5 " +
-                  (aprovado ? "bg-verde text-white" : "border border-slate-300 text-slate-500")
+                  "text-xs font-extrabold rounded-full px-3.5 py-1.5 " +
+                  (aprovado ? "bg-verde text-white" : "border border-slate-300 bg-white text-slate-500")
                 }
               >
                 {aprovado ? "✓ Aprovado para envio" : "Aguardando aprovação"}
@@ -336,17 +342,17 @@ export default function OrcamentoForm({ inicial }) {
               onClick={alternarEnviado}
               disabled={alternandoEnviado}
               className={
-                "text-xs font-bold rounded-md px-3 py-1.5 disabled:opacity-60 " +
+                "text-xs font-extrabold rounded-full px-3.5 py-1.5 disabled:opacity-60 " +
                 (enviado
                   ? "bg-azul text-white hover:opacity-90"
-                  : "border border-slate-300 text-slate-600 hover:bg-white")
+                  : "border border-slate-300 bg-white text-slate-600 hover:bg-slate-50")
               }
             >
               {alternandoEnviado ? "..." : enviado ? "✓ Enviado para o cliente" : "Marcar como enviado"}
             </button>
             <button
               onClick={copiarLink}
-              className="text-xs font-bold border border-azul text-azul rounded-md px-3 py-1.5 hover:bg-white"
+              className="text-xs font-extrabold border border-azul text-azul bg-white rounded-full px-3.5 py-1.5 hover:bg-blue-50"
             >
               {linkCopiado ? "Link copiado!" : "Copiar link para compartilhar"}
             </button>
@@ -354,37 +360,37 @@ export default function OrcamentoForm({ inicial }) {
         </div>
       )}
 
-      <section className="bg-white rounded-2xl shadow-sm p-4">
-        <h2 className="text-xs font-bold uppercase tracking-wide text-azul border-b-2 border-slate-100 pb-1.5 mb-3">
+      <section className="bg-white rounded-2xl shadow-[0_1px_2px_rgba(15,32,64,.05)] border border-[#e3e9f2] p-4">
+        <h2 className="text-[11px] font-extrabold uppercase tracking-wide text-azul border-b-2 border-slate-100 pb-2 mb-3">
           Cliente e emitente
         </h2>
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-wrap gap-2.5">
           <input
             type="number"
             value={numero}
             onFocus={(e) => e.target.select()}
             onChange={(e) => setNumero(e.target.value)}
             placeholder="Nº (automático)"
-            className="sm:w-36 border border-slate-300 rounded-lg px-3 py-2 font-semibold focus:outline-none focus:border-azul"
+            className="w-full sm:w-[120px] sm:flex-none border-[1.5px] border-slate-300 rounded-[10px] px-3 py-[11px] text-[15px] font-bold text-[#1b2a41] focus:outline-none focus:border-azul"
           />
           <input
             type="text"
             value={cliente}
             onChange={(e) => setCliente(e.target.value)}
             placeholder="Nome do cliente (ex: Marista Tijuca)"
-            className="flex-1 border border-slate-300 rounded-lg px-3 py-2 font-semibold focus:outline-none focus:border-azul"
+            className="flex-1 min-w-[180px] border-[1.5px] border-slate-300 rounded-[10px] px-3 py-[11px] text-[15px] font-bold text-[#1b2a41] focus:outline-none focus:border-azul"
           />
           <input
             type="text"
             value={observacao}
             onChange={(e) => setObservacao(e.target.value)}
             placeholder="Descrição / observação (ex: agendas + brindes)"
-            className="flex-1 border border-slate-300 rounded-lg px-3 py-2 font-semibold focus:outline-none focus:border-azul"
+            className="flex-1 min-w-[180px] border-[1.5px] border-slate-300 rounded-[10px] px-3 py-[11px] text-[15px] font-bold text-[#1b2a41] focus:outline-none focus:border-azul"
           />
           <select
             value={empresa}
             onChange={(e) => setEmpresa(e.target.value)}
-            className="border border-slate-300 rounded-lg px-3 py-2 font-semibold focus:outline-none focus:border-azul"
+            className="flex-1 min-w-[160px] border-[1.5px] border-slate-300 rounded-[10px] px-3 py-[11px] text-sm font-bold text-[#1b2a41] bg-white focus:outline-none focus:border-azul"
           >
             {Object.values(EMPRESAS).map((e) => (
               <option key={e.codigo} value={e.codigo}>
@@ -394,79 +400,80 @@ export default function OrcamentoForm({ inicial }) {
           </select>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 mt-3">
+        <div className="flex flex-wrap gap-2.5 mt-2.5">
           <input
             type="text"
             value={prazoEntrega}
             onChange={(e) => setPrazoEntrega(e.target.value)}
             placeholder="Prazo de entrega (opcional, ex: 15 dias úteis após aprovação da arte)"
-            className="flex-1 border border-slate-300 rounded-lg px-3 py-2 font-semibold focus:outline-none focus:border-azul"
+            className="flex-1 min-w-[220px] border-[1.5px] border-slate-300 rounded-[10px] px-3 py-[11px] text-[15px] font-semibold text-[#1b2a41] focus:outline-none focus:border-azul"
           />
           <input
             type="text"
             value={condicoesPagamento}
             onChange={(e) => setCondicoesPagamento(e.target.value)}
             placeholder="Condições de pagamento (opcional, ex: Boleto, 21 dias)"
-            className="flex-1 border border-slate-300 rounded-lg px-3 py-2 font-semibold focus:outline-none focus:border-azul"
+            className="flex-1 min-w-[220px] border-[1.5px] border-slate-300 rounded-[10px] px-3 py-[11px] text-[15px] font-semibold text-[#1b2a41] focus:outline-none focus:border-azul"
           />
         </div>
       </section>
 
-      <section className="bg-white rounded-2xl shadow-sm p-4">
-        <h2 className="text-xs font-bold uppercase tracking-wide text-azul border-b-2 border-slate-100 pb-1.5 mb-3">
-          Itens do orçamento
-        </h2>
+      <section className="bg-white rounded-2xl shadow-[0_1px_2px_rgba(15,32,64,.05)] border border-[#e3e9f2] p-4">
+        <div className="flex items-center justify-between gap-2.5 border-b-2 border-slate-100 pb-2 mb-3">
+          <h2 className="text-[11px] font-extrabold uppercase tracking-wide text-azul">Itens do orçamento</h2>
+          <span className="text-xs font-bold text-slate-400">{itens.length} itens</span>
+        </div>
 
-        <div className="bg-slate-50 rounded-lg p-3 mb-3 flex flex-wrap items-center gap-4">
-          <span className="text-sm font-semibold">Padrão geral →</span>
-          <label className="text-xs flex items-center gap-1.5">
+        <div className="bg-[#f4f7fc] border border-[#e3e9f2] rounded-xl p-3 mb-3.5 flex flex-wrap items-center gap-3">
+          <span className="text-sm font-extrabold text-azul">Padrão →</span>
+          <label className="text-xs font-bold text-slate-600 flex items-center gap-1.5">
             Comissão
             <input
               type="number"
               value={defComissao}
               onFocus={(e) => e.target.select()}
               onChange={(e) => setDefComissao(parseFloat(e.target.value) || 0)}
-              className="w-16 border border-slate-300 rounded-md px-2 py-1 text-center font-semibold"
+              className="w-[52px] border-[1.5px] border-slate-300 rounded-lg px-1.5 py-1.5 text-center font-bold focus:outline-none focus:border-azul"
             />
             %
           </label>
-          <label className="text-xs flex items-center gap-1.5">
+          <label className="text-xs font-bold text-slate-600 flex items-center gap-1.5">
             Imposto
             <input
               type="number"
               value={defImposto}
               onFocus={(e) => e.target.select()}
               onChange={(e) => setDefImposto(parseFloat(e.target.value) || 0)}
-              className="w-16 border border-slate-300 rounded-md px-2 py-1 text-center font-semibold"
+              className="w-[52px] border-[1.5px] border-slate-300 rounded-lg px-1.5 py-1.5 text-center font-bold focus:outline-none focus:border-azul"
             />
             %
           </label>
           <button
             onClick={aplicarPadraoATodos}
-            className="text-xs font-bold border border-azul text-azul rounded-md px-3 py-1.5 hover:bg-blue-50"
+            className="text-xs font-extrabold border-[1.5px] border-azul text-azul bg-white rounded-lg px-3 py-1.5 hover:bg-blue-50"
           >
             Aplicar a todos
           </button>
-          <span className="text-xs text-slate-500 basis-full">
+          <span className="text-[11px] text-slate-400 basis-full">
             O padrão preenche itens novos. Cada item pode ter comissão e imposto próprios.
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+        <div className="hidden md:block overflow-x-auto -mx-1">
+          <table className="w-full text-xs border-separate border-spacing-y-1">
             <thead>
-              <tr className="bg-azul text-white text-[10px] uppercase">
-                <th className="text-left px-1 py-1.5 rounded-l-md">Item</th>
-                <th className="px-1 py-1.5">Fornecedor</th>
-                <th className="px-1 py-1.5">Qtd</th>
-                <th className="px-1 py-1.5">Custo unit. compra</th>
-                <th className="px-1 py-1.5">Frete</th>
-                <th className="px-1 py-1.5">Com. %</th>
-                <th className="px-1 py-1.5">Imp. %</th>
-                <th className="px-1.5 py-1.5">Preço unit.</th>
-                <th className="px-1.5 py-1.5">Total</th>
-                <th className="px-1.5 py-1.5">Margem</th>
-                <th className="px-1 py-1.5 rounded-r-md" />
+              <tr className="bg-azul text-white text-[10px] uppercase tracking-wide">
+                <th className="text-left px-2 py-2 rounded-l-lg">Item</th>
+                <th className="px-1 py-2">Fornecedor</th>
+                <th className="px-1 py-2">Qtd</th>
+                <th className="px-1 py-2">Custo unit.</th>
+                <th className="px-1 py-2">Frete</th>
+                <th className="px-1 py-2">Com. %</th>
+                <th className="px-1 py-2">Imp. %</th>
+                <th className="px-1.5 py-2">Preço unit.</th>
+                <th className="px-1.5 py-2">Total</th>
+                <th className="px-1.5 py-2">Margem</th>
+                <th className="px-1 py-2 rounded-r-lg" />
               </tr>
             </thead>
             <tbody>
@@ -487,49 +494,68 @@ export default function OrcamentoForm({ inicial }) {
           </table>
         </div>
 
+        <div className="md:hidden flex flex-col gap-2.5">
+          {itens.map((it, index) => (
+            <ItemCardMobile
+              key={it.id}
+              item={it}
+              nomeExibido={it.nome || `Item ${index + 1}`}
+              fornecedores={fornecedores}
+              aoCadastrarFornecedor={aoCadastrarFornecedor}
+              onChange={(novo) => updateItem(it.id, novo)}
+              onRemove={() => removeItem(it.id)}
+              onDuplicar={() => duplicarItem(it.id)}
+              onMoverCima={index > 0 ? () => moverItem(it.id, -1) : null}
+              onMoverBaixo={index < itens.length - 1 ? () => moverItem(it.id, 1) : null}
+              expanded={expandedId === it.id}
+              onToggleExpand={() => setExpandedId((prev) => (prev === it.id ? null : it.id))}
+            />
+          ))}
+        </div>
+
         <button
           onClick={addItem}
-          className="w-full mt-3 py-3 text-sm font-bold border-2 border-dashed border-azul text-azul rounded-xl hover:bg-blue-50"
+          className="w-full mt-3.5 py-[15px] text-sm font-extrabold border-2 border-dashed border-[#b9c6da] text-azul bg-[#f9fbfd] rounded-2xl hover:bg-blue-50 hover:border-azul"
         >
           + Adicionar item
         </button>
 
         {itensComissaoBaixa.length > 0 && (
-          <p className="mt-3 text-xs font-semibold text-vermelho">
-            Atenção: {itensComissaoBaixa.length} item(ns) com comissão abaixo de{" "}
-            {formatMoney(COMISSAO_MINIMA)} — pode não valer a pena o trabalho.
+          <p className="mt-3 text-xs font-bold text-vermelho">
+            ⚠ {itensComissaoBaixa.length} item(ns) com comissão abaixo de {formatMoney(COMISSAO_MINIMA)} — pode não
+            valer a pena o trabalho.
           </p>
         )}
       </section>
 
-      <section className="bg-white rounded-2xl shadow-sm p-4">
-        <h2 className="text-xs font-bold uppercase tracking-wide text-azul border-b-2 border-slate-100 pb-1.5 mb-3">
+      <section className="bg-white rounded-2xl shadow-[0_1px_2px_rgba(15,32,64,.05)] border border-[#e3e9f2] p-4">
+        <h2 className="text-[11px] font-extrabold uppercase tracking-wide text-azul border-b-2 border-slate-100 pb-2 mb-3">
           Resultado do orçamento
         </h2>
-        <div className="flex flex-col gap-1.5 text-sm">
+        <div className="flex flex-col gap-[7px] text-sm">
           <div className="flex justify-between">
             <span className="text-slate-500">Custo total do material</span>
-            <span className="font-semibold">{formatMoney(totals.custoTotal)}</span>
+            <span className="font-bold">{formatMoney(totals.custoTotal)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-500">Custo total do frete</span>
-            <span className="font-semibold">{formatMoney(totals.freteTotal)}</span>
+            <span className="font-bold">{formatMoney(totals.freteTotal)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500">Custo total de outros custos</span>
-            <span className="font-semibold">{formatMoney(totals.outrosCustosTotal)}</span>
+            <span className="text-slate-500">Outros custos</span>
+            <span className="font-bold">{formatMoney(totals.outrosCustosTotal)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-500">Custo total do imposto</span>
-            <span className="font-semibold">{formatMoney(totals.impostoTotal)}</span>
+            <span className="font-bold">{formatMoney(totals.impostoTotal)}</span>
           </div>
-          <div className="flex justify-between border-t border-slate-100 pt-1.5 mt-1">
-            <span className="text-azul font-semibold">Preço total cobrado (cliente)</span>
-            <span className="font-bold text-azul">{formatMoney(totals.precoTotal)}</span>
+          <div className="flex justify-between border-t border-slate-100 pt-2 mt-0.5">
+            <span className="text-azul font-extrabold">Preço total cobrado (cliente)</span>
+            <span className="font-black text-azul text-base">{formatMoney(totals.precoTotal)}</span>
           </div>
         </div>
 
-        <div className="mt-3">
+        <div className="mt-3.5">
           <MargemBadge
             margem={totals.margemTotal}
             margemPct={totals.margemPct}
@@ -541,25 +567,25 @@ export default function OrcamentoForm({ inicial }) {
         {erro && <p className="mt-3 text-sm font-semibold text-vermelho">{erro}</p>}
         {salvo && <p className="mt-3 text-sm font-semibold text-verde">Orçamento salvo!</p>}
 
-        <div className="flex flex-col sm:flex-row gap-3 mt-4">
+        <div className="flex flex-wrap gap-2.5 mt-4">
           <button
             onClick={salvar}
             disabled={salvando}
-            className="flex-1 py-3 text-sm font-bold bg-verde text-white rounded-xl disabled:opacity-60"
+            className="flex-1 min-w-[160px] py-[15px] text-sm font-extrabold bg-verde text-white rounded-xl hover:opacity-90 disabled:opacity-60"
           >
             {salvando ? "Salvando..." : "Salvar orçamento"}
           </button>
           <button
             onClick={() => gerarPDF("cliente")}
             disabled={Boolean(gerandoPdf)}
-            className="flex-1 py-3 text-sm font-bold bg-azul text-white rounded-xl disabled:opacity-60"
+            className="flex-1 min-w-[130px] py-[15px] text-sm font-extrabold bg-azul text-white rounded-xl hover:opacity-90 disabled:opacity-60"
           >
             {gerandoPdf === "cliente" ? "Gerando..." : "PDF Cliente"}
           </button>
           <button
             onClick={() => gerarPDF("fornecedor")}
             disabled={Boolean(gerandoPdf)}
-            className="flex-1 py-3 text-sm font-bold bg-slate-700 text-white rounded-xl disabled:opacity-60"
+            className="flex-1 min-w-[130px] py-[15px] text-sm font-extrabold bg-slate-700 text-white rounded-xl hover:opacity-90 disabled:opacity-60"
           >
             {gerandoPdf === "fornecedor" ? "Gerando..." : "PDF Fornecedor"}
           </button>
