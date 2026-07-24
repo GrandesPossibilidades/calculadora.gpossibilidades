@@ -6,6 +6,7 @@ import { margemCores, computeItem, computeTotals } from "@/lib/calc";
 import { formatMoney, formatPct } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 import { EMPRESAS } from "@/lib/empresas";
+import { mapItemRow } from "@/lib/mapItemRow";
 
 function toCSV(orcamentos) {
   const linhas = ["Nº;Data;Cliente;Observação;Empresa;Custo;Preço Total;Margem R$;Margem %;Criado por"];
@@ -75,18 +76,7 @@ export default function HistoricoTable({ orcamentos, erro }) {
       .eq("orcamento_id", orcamentoId)
       .order("ordem", { ascending: true });
 
-    return (data || []).map((row) => ({
-      nome: row.nome,
-      fornecedor: row.fornecedor || "",
-      referencias: row.referencias || [],
-      custoUnit: Number(row.custo_unit),
-      quantidade: Number(row.quantidade),
-      frete: Number(row.frete),
-      outrosCustos: Number(row.outros_custos),
-      notasInternas: row.notas_internas || "",
-      comissaoPct: Number(row.comissao_pct),
-      impostoPct: Number(row.imposto_pct),
-    }));
+    return (data || []).map(mapItemRow);
   }
 
   async function gerarPDF(o, modo) {
@@ -172,9 +162,10 @@ export default function HistoricoTable({ orcamentos, erro }) {
           ordem: index,
           custo_unit: it.custoUnit,
           quantidade: it.quantidade,
-          frete: it.frete,
-          outros_custos: it.outrosCustos || 0,
-          notas_internas: it.notasInternas?.trim() || null,
+          frete: 0,
+          outros_custos: r.outrosCustos,
+          notas_internas: null,
+          outros_custos_itens: it.outrosCustosItens || [],
           comissao_pct: it.comissaoPct,
           imposto_pct: it.impostoPct,
           preco_unit: r.precoUnitario,

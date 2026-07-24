@@ -40,6 +40,10 @@ export default function ItemCardMobile({
     removerReferencia,
     setPrecoUnitarioDesejado,
     setPrecoTotalDesejado,
+    outrosCustosItens,
+    adicionarCustoItem,
+    removerCustoItem,
+    atualizarCustoItem,
     iconRef,
     popoverRef,
     refAberta,
@@ -248,28 +252,6 @@ export default function ItemCardMobile({
               />
             </label>
             <label className={rotulo}>
-              Frete (R$)
-              <input
-                type="number"
-                inputMode="decimal"
-                value={item.frete}
-                onFocus={(e) => e.target.select()}
-                onChange={(e) => set("frete", e.target.value)}
-                className={campo + " text-center"}
-              />
-            </label>
-            <label className={rotulo}>
-              Outros custos (R$)
-              <input
-                type="number"
-                inputMode="decimal"
-                value={item.outrosCustos}
-                onFocus={(e) => e.target.select()}
-                onChange={(e) => set("outrosCustos", e.target.value)}
-                className={campo + " text-center"}
-              />
-            </label>
-            <label className={rotulo}>
               Comissão %
               <input
                 type="number"
@@ -297,16 +279,51 @@ export default function ItemCardMobile({
             <p className="text-xs font-bold text-vermelho -mt-1">Comissão abaixo de R$ 150 — pode não valer o trabalho.</p>
           )}
 
-          <label className={rotulo}>
-            Notas internas — nunca aparece pro cliente
-            <textarea
-              value={item.notasInternas || ""}
-              onChange={(e) => set("notasInternas", e.target.value)}
-              rows={2}
-              placeholder="Ex: placa de peça R$120, bancagem R$80..."
-              className={campo + " resize-none normal-case font-medium text-[14px]"}
-            />
-          </label>
+          <div>
+            <div className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wide mb-1.5">
+              Outros custos — uso interno, nunca aparece pro cliente
+            </div>
+            {outrosCustosItens.length === 0 && (
+              <p className="text-[13px] text-slate-400 mb-2">Nenhum custo adicionado ainda.</p>
+            )}
+            <div className="flex flex-col gap-2 mb-2">
+              {outrosCustosItens.map((custo, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={custo.descricao}
+                    onChange={(e) => atualizarCustoItem(i, "descricao", e.target.value)}
+                    placeholder="Descrição (ex: frete, saquinho...)"
+                    className="flex-1 min-w-0 border-[1.5px] border-slate-300 rounded-[10px] px-3 py-2.5 text-[14px] font-semibold text-[#1b2a41] focus:outline-none focus:border-azul box-border"
+                  />
+                  <CampoNumero
+                    value={custo.valor || 0}
+                    onChange={(v) => atualizarCustoItem(i, "valor", v)}
+                    className="w-24 shrink-0 border-[1.5px] border-slate-300 rounded-[10px] px-2 py-2.5 text-[14px] font-semibold text-center focus:outline-none focus:border-azul box-border"
+                  />
+                  <button
+                    onClick={() => removerCustoItem(i)}
+                    className="shrink-0 text-vermelho font-bold text-lg px-1"
+                    aria-label="Remover custo"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={adicionarCustoItem}
+              className="w-full text-[13px] font-bold border-[1.5px] border-dashed border-azul text-azul rounded-[10px] py-2.5 hover:bg-blue-50"
+            >
+              + Adicionar outros custos
+            </button>
+            {outrosCustosItens.length > 0 && (
+              <div className="flex justify-between mt-2 text-[13px] font-extrabold text-[#1b2a41]">
+                <span>Total de outros custos</span>
+                <span>{formatMoney(r.outrosCustos)}</span>
+              </div>
+            )}
+          </div>
 
           <div className="grid grid-cols-2 gap-2.5">
             <label className="flex flex-col gap-1.5 text-[11px] font-extrabold text-azul uppercase tracking-wide">

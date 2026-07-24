@@ -19,9 +19,7 @@ const novoItem = (comissaoPct, impostoPct) => ({
   referencias: [],
   custoUnit: 0,
   quantidade: 1,
-  frete: 0,
-  outrosCustos: 0,
-  notasInternas: "",
+  outrosCustosItens: [],
   comissaoPct,
   impostoPct,
 });
@@ -236,9 +234,10 @@ export default function OrcamentoForm({ inicial }) {
         ordem: index,
         custo_unit: it.custoUnit,
         quantidade: it.quantidade,
-        frete: it.frete,
-        outros_custos: it.outrosCustos || 0,
-        notas_internas: it.notasInternas?.trim() || null,
+        frete: 0,
+        outros_custos: r.outrosCustos,
+        notas_internas: null,
+        outros_custos_itens: it.outrosCustosItens || [],
         comissao_pct: it.comissaoPct,
         imposto_pct: it.impostoPct,
         preco_unit: r.precoUnitario,
@@ -467,7 +466,7 @@ export default function OrcamentoForm({ inicial }) {
                 <th className="px-1 py-2">Fornecedor</th>
                 <th className="px-1 py-2">Qtd</th>
                 <th className="px-1 py-2">Custo unit.</th>
-                <th className="px-1 py-2">Frete/Outros</th>
+                <th className="px-1 py-2">Outros custos</th>
                 <th className="px-1 py-2">Com. %</th>
                 <th className="px-1 py-2">Imp. %</th>
                 <th className="px-1.5 py-2">Preço unit.</th>
@@ -538,10 +537,6 @@ export default function OrcamentoForm({ inicial }) {
             <span className="font-bold">{formatMoney(totals.custoTotal)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500">Custo total do frete</span>
-            <span className="font-bold">{formatMoney(totals.freteTotal)}</span>
-          </div>
-          <div className="flex justify-between">
             <span className="text-slate-500">Outros custos</span>
             <span className="font-bold">{formatMoney(totals.outrosCustosTotal)}</span>
           </div>
@@ -560,7 +555,7 @@ export default function OrcamentoForm({ inicial }) {
             margem={totals.margemTotal}
             margemPct={totals.margemPct}
             titulo="Margem líquida (lucro real)"
-            descricao={`= ${formatMoney(totals.precoTotal)} − ${formatMoney(totals.custoTotal)} − ${formatMoney(totals.freteTotal)} − ${formatMoney(totals.outrosCustosTotal)} − ${formatMoney(totals.impostoTotal)}`}
+            descricao={`= ${formatMoney(totals.precoTotal)} − ${formatMoney(totals.custoTotal)} − ${formatMoney(totals.outrosCustosTotal)} − ${formatMoney(totals.impostoTotal)}`}
           />
         </div>
 

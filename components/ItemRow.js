@@ -46,6 +46,10 @@ export default function ItemRow({
     refAberta,
     popoverPos,
     alternarPopoverRef,
+    outrosCustosItens,
+    adicionarCustoItem,
+    removerCustoItem,
+    atualizarCustoItem,
     custoIconRef,
     custoPopoverRef,
     custoAberto,
@@ -192,56 +196,75 @@ export default function ItemRow({
           {formatMoney(r.custoTotal)}
         </div>
       </td>
-      <td className="px-1 py-1.5 align-top min-w-[64px] text-center">
-        <div className="relative inline-flex flex-col items-center gap-1">
+      <td className="px-1 py-1.5 align-top min-w-[100px]">
+        <div className="relative">
           <button
             ref={custoIconRef}
             type="button"
             onClick={alternarPopoverCusto}
-            title="Frete, outros custos e notas internas (uso interno, nunca aparece pro cliente)"
+            title="Outros custos — uso interno, nunca aparece pro cliente"
             className={
-              "w-7 h-7 rounded-md text-[12px] leading-none border " +
-              (item.frete > 0 || item.outrosCustos > 0 || item.notasInternas
-                ? "bg-amarelo/15 border-amarelo text-amarelo font-bold"
-                : "border-[#d3dbe6] text-slate-400")
+              "w-full flex items-center justify-center gap-1.5 rounded-[7px] border px-2 py-1.5 text-[13px] font-bold " +
+              (outrosCustosItens.length > 0
+                ? "bg-amarelo/15 border-amarelo text-[#8a5a06]"
+                : "border-[#d3dbe6] text-slate-400 hover:border-azul")
             }
           >
-            $
+            <span className="text-[14px] leading-none">$</span>
+            {formatMoney(r.outrosCustos)}
           </button>
-          <div className="text-[10px] font-bold text-[#1b2a41] whitespace-nowrap">
-            {formatMoney((item.frete || 0) + (item.outrosCustos || 0))}
-          </div>
 
           {custoAberto &&
             custoPopoverPos &&
             createPortal(
               <div
                 ref={custoPopoverRef}
-                className="fixed z-50 w-60 bg-white border border-slate-200 rounded-xl shadow-[0_12px_34px_rgba(15,32,64,.25)] p-3 text-left normal-case"
+                className="fixed z-50 w-72 bg-white border border-slate-200 rounded-xl shadow-[0_12px_34px_rgba(15,32,64,.25)] p-3 text-left normal-case"
                 style={{ top: custoPopoverPos.top, left: custoPopoverPos.left }}
               >
-                <label className="text-[11px] font-extrabold text-slate-500 block mb-1">Frete (R$)</label>
-                <CampoNumero
-                  value={item.frete || 0}
-                  onChange={(v) => set("frete", v)}
-                  className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-semibold focus:outline-none focus:border-azul mb-2.5"
-                />
-                <label className="text-[11px] font-extrabold text-slate-500 block mb-1">Outros custos (R$)</label>
-                <CampoNumero
-                  value={item.outrosCustos || 0}
-                  onChange={(v) => set("outrosCustos", v)}
-                  className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-semibold focus:outline-none focus:border-azul mb-2.5"
-                />
-                <label className="text-[11px] font-extrabold text-slate-500 block mb-1">
-                  Notas internas — nunca aparece pro cliente
-                </label>
-                <textarea
-                  value={item.notasInternas || ""}
-                  onChange={(e) => set("notasInternas", e.target.value)}
-                  rows={3}
-                  placeholder="Ex: placa de peça R$120, bancagem R$80..."
-                  className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-azul resize-none"
-                />
+                <div className="text-[11px] font-extrabold text-azul uppercase tracking-wide mb-2">
+                  Outros custos
+                </div>
+                {outrosCustosItens.length === 0 && (
+                  <p className="text-[12px] text-slate-400 mb-2">Nenhum custo adicionado ainda.</p>
+                )}
+                <div className="flex flex-col gap-1.5 mb-2">
+                  {outrosCustosItens.map((custo, i) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        value={custo.descricao}
+                        onChange={(e) => atualizarCustoItem(i, "descricao", e.target.value)}
+                        placeholder="Descrição (ex: frete, saquinho...)"
+                        className="flex-1 min-w-0 border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-semibold focus:outline-none focus:border-azul"
+                      />
+                      <CampoNumero
+                        value={custo.valor || 0}
+                        onChange={(v) => atualizarCustoItem(i, "valor", v)}
+                        className="w-20 shrink-0 border border-slate-300 rounded-lg px-1.5 py-1.5 text-xs font-semibold text-center focus:outline-none focus:border-azul"
+                      />
+                      <button
+                        onClick={() => removerCustoItem(i)}
+                        className="shrink-0 text-vermelho font-bold px-0.5"
+                        aria-label="Remover custo"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={adicionarCustoItem}
+                  className="w-full text-xs font-bold border border-dashed border-azul text-azul rounded-lg py-1.5 hover:bg-blue-50"
+                >
+                  + Adicionar outros custos
+                </button>
+                {outrosCustosItens.length > 0 && (
+                  <div className="flex justify-between mt-2 pt-2 border-t border-slate-100 text-xs font-extrabold text-[#1b2a41]">
+                    <span>Total</span>
+                    <span>{formatMoney(r.outrosCustos)}</span>
+                  </div>
+                )}
               </div>,
               document.body
             )}
@@ -284,7 +307,7 @@ export default function ItemRow({
           value={Math.round(r.precoUnitario * 10000) / 10000}
           casasDecimais={4}
           onChange={setPrecoUnitarioDesejado}
-          title="Forçar o preço unitário recalcula a comissão % (custo, frete e imposto ficam travados)"
+          title="Forçar o preço unitário recalcula a comissão % (custo, outros custos e imposto ficam travados)"
           className={campo + " text-center"}
         />
       </td>
@@ -292,7 +315,7 @@ export default function ItemRow({
         <CampoNumero
           value={Math.round(r.precoVendaTotal * 100) / 100}
           onChange={setPrecoTotalDesejado}
-          title="Forçar o total recalcula a comissão % (custo, frete e imposto ficam travados)"
+          title="Forçar o total recalcula a comissão % (custo, outros custos e imposto ficam travados)"
           className={campo + " text-center font-bold text-azul"}
         />
       </td>

@@ -1,21 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import OrcamentoForm from "@/components/OrcamentoForm";
-
-function mapItem(row) {
-  return {
-    nome: row.nome,
-    fornecedor: row.fornecedor || "",
-    referencias: row.referencias || [],
-    custoUnit: Number(row.custo_unit),
-    quantidade: Number(row.quantidade),
-    frete: Number(row.frete),
-    outrosCustos: Number(row.outros_custos),
-    notasInternas: row.notas_internas || "",
-    comissaoPct: Number(row.comissao_pct),
-    impostoPct: Number(row.imposto_pct),
-  };
-}
+import { mapItemRow } from "@/lib/mapItemRow";
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
@@ -87,7 +73,7 @@ export default async function OrcamentoPage({ params }) {
     aprovado: orcamento.aprovado,
     enviado: orcamento.enviado,
     empresa: orcamento.empresa,
-    itens: (itensDb || []).map(mapItem),
+    itens: (itensDb || []).map(mapItemRow),
   };
 
   return <OrcamentoForm inicial={inicial} />;

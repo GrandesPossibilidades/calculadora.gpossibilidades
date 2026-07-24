@@ -52,9 +52,9 @@ const styles = StyleSheet.create({
 });
 
 // Modo "cliente": só nome, quantidade, preço unitário e total (dados de venda).
-// Modo "fornecedor": tudo, inclusive custo, frete, comissão, imposto, margem e as
-// referências de fornecedor (links clicáveis) — uso interno da GP, nunca enviar
-// esse arquivo pro cliente final.
+// Modo "fornecedor": tudo, inclusive custo, outros custos, comissão, imposto,
+// margem e as referências de fornecedor (links clicáveis) — uso interno da GP,
+// nunca enviar esse arquivo pro cliente final.
 export default function OrcamentoPDF({
   modo = "cliente",
   numero,
@@ -109,8 +109,7 @@ export default function OrcamentoPDF({
             {fornecedorMode && <Text style={[styles.th, colRef]}>Referências</Text>}
             <Text style={[styles.th, colNum]}>Qtd</Text>
             {fornecedorMode && <Text style={[styles.th, colNum]}>Custo unit.</Text>}
-            {fornecedorMode && <Text style={[styles.th, colNum]}>Frete</Text>}
-            {fornecedorMode && <Text style={[styles.th, colNum]}>Outros</Text>}
+            {fornecedorMode && <Text style={[styles.th, colNum]}>Outros custos</Text>}
             {fornecedorMode && <Text style={[styles.th, colNum]}>Com. %</Text>}
             {fornecedorMode && <Text style={[styles.th, colNum]}>Imp. %</Text>}
             <Text style={[styles.th, colNum]}>Preço unit.</Text>
@@ -124,8 +123,13 @@ export default function OrcamentoPDF({
               <View style={styles.row} key={it.id}>
                 <View style={[styles.td, colNome, { alignItems: "flex-start" }]}>
                   <Text>{it.nome || "(item)"}</Text>
-                  {fornecedorMode && it.notasInternas ? (
-                    <Text style={{ fontSize: 6.5, color: "#64748B", marginTop: 2 }}>{it.notasInternas}</Text>
+                  {fornecedorMode && (it.outrosCustosItens || []).length > 0 ? (
+                    <Text style={{ fontSize: 6.5, color: "#64748B", marginTop: 2 }}>
+                      {it.outrosCustosItens
+                        .filter((c) => c.descricao || c.valor)
+                        .map((c) => `${c.descricao || "(sem descrição)"}: ${formatMoney(c.valor)}`)
+                        .join(" · ")}
+                    </Text>
                   ) : null}
                 </View>
                 {fornecedorMode && <Text style={[styles.td, colFornecedor]}>{it.fornecedor || "-"}</Text>}
@@ -145,8 +149,7 @@ export default function OrcamentoPDF({
                 )}
                 <Text style={[styles.td, colNum]}>{it.quantidade}</Text>
                 {fornecedorMode && <Text style={[styles.td, colNum]}>{formatMoney(it.custoUnit)}</Text>}
-                {fornecedorMode && <Text style={[styles.td, colNum]}>{formatMoney(it.frete)}</Text>}
-                {fornecedorMode && <Text style={[styles.td, colNum]}>{formatMoney(it.outrosCustos)}</Text>}
+                {fornecedorMode && <Text style={[styles.td, colNum]}>{formatMoney(r.outrosCustos)}</Text>}
                 {fornecedorMode && <Text style={[styles.td, colNum]}>{it.comissaoPct}%</Text>}
                 {fornecedorMode && <Text style={[styles.td, colNum]}>{it.impostoPct}%</Text>}
                 <Text style={[styles.td, colNum]}>{formatMoneyPreciso(r.precoUnitario)}</Text>

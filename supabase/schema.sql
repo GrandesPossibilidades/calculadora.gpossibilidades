@@ -34,6 +34,11 @@ create table if not exists public.orcamento_itens (
   frete numeric not null default 0,
   outros_custos numeric not null default 0,
   notas_internas text,
+  -- Lista [{descricao, valor}] que substitui frete/outros_custos/notas_internas
+  -- na UI: cada custo extra (frete, embalagem, etc.) é uma linha com nome +
+  -- valor próprios, e a soma alimenta a cascata. As colunas antigas continuam
+  -- existindo só pra não perder dado histórico de orçamentos já salvos.
+  outros_custos_itens jsonb not null default '[]'::jsonb,
   comissao_pct numeric not null default 0,
   imposto_pct numeric not null default 15,
   preco_unit numeric not null default 0,
