@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "calculadora-gp-dev",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "npm", "run", "dev", "--prefix", "C:\\Users\\gabri\\OneDrive\\Área de Trabalho\\calculadora-gp", "--", "-p", "3010"],
+      "port": 3010
+    }
+  ]
+}
