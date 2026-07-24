@@ -467,7 +467,7 @@ export default function OrcamentoForm({ inicial }) {
                 <th className="px-1 py-2">Fornecedor</th>
                 <th className="px-1 py-2">Qtd</th>
                 <th className="px-1 py-2">Custo unit.</th>
-                <th className="px-1 py-2">Frete</th>
+                <th className="px-1 py-2">Frete/Outros</th>
                 <th className="px-1 py-2">Com. %</th>
                 <th className="px-1 py-2">Imp. %</th>
                 <th className="px-1.5 py-2">Preço unit.</th>

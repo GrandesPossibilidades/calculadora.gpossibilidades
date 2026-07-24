@@ -42,17 +42,15 @@ export default function ItemRow({
     setPrecoUnitarioDesejado,
     setPrecoTotalDesejado,
     iconRef,
+    popoverRef,
     refAberta,
     popoverPos,
-    abrirPopover,
-    fecharPopover,
-    alternarPin,
+    alternarPopoverRef,
     custoIconRef,
+    custoPopoverRef,
     custoAberto,
     custoPopoverPos,
-    abrirCustoPopover,
-    fecharCustoPopover,
-    alternarCustoPin,
+    alternarPopoverCusto,
   } = useItemRow({ item, onChange, fornecedores, aoCadastrarFornecedor });
 
   return (
@@ -85,11 +83,11 @@ export default function ItemRow({
             <option value={OUTROS}>Outros...</option>
           </select>
 
-          <div className="relative shrink-0" onMouseEnter={abrirPopover} onMouseLeave={fecharPopover}>
+          <div className="relative shrink-0">
             <button
               ref={iconRef}
               type="button"
-              onClick={alternarPin}
+              onClick={alternarPopoverRef}
               title="Referências do fornecedor (link, código...)"
               className={
                 "w-6 h-6 rounded-md text-[10px] leading-none border " +
@@ -105,10 +103,9 @@ export default function ItemRow({
               popoverPos &&
               createPortal(
                 <div
+                  ref={popoverRef}
                   className="fixed z-50 w-56 bg-white border border-slate-200 rounded-xl shadow-[0_12px_34px_rgba(15,32,64,.25)] p-3 text-left normal-case"
                   style={{ top: popoverPos.top, left: popoverPos.left }}
-                  onMouseEnter={() => {}}
-                  onMouseLeave={fecharPopover}
                 >
                   <div className="text-[11px] font-extrabold text-azul uppercase tracking-wide mb-2">
                     Referências do fornecedor
@@ -195,69 +192,60 @@ export default function ItemRow({
           {formatMoney(r.custoTotal)}
         </div>
       </td>
-      <td className="px-1 py-1.5 align-top min-w-[68px]">
-        <div className="flex items-center gap-1">
-          <input
-            type="number"
-            step="10"
-            value={item.frete}
-            onFocus={selecionarTudo}
-            onChange={(e) => set("frete", e.target.value)}
-            className={campo + " text-center"}
-          />
-          <div className="relative shrink-0" onMouseEnter={abrirCustoPopover} onMouseLeave={fecharCustoPopover}>
-            <button
-              ref={custoIconRef}
-              type="button"
-              onClick={alternarCustoPin}
-              title="Outros custos e notas internas (uso interno, nunca aparece pro cliente)"
-              className={
-                "w-6 h-6 rounded-md text-[11px] leading-none border " +
-                (item.outrosCustos > 0 || item.notasInternas
-                  ? "bg-amarelo/15 border-amarelo text-amarelo font-bold"
-                  : "border-[#d3dbe6] text-slate-400")
-              }
-            >
-              $
-            </button>
+      <td className="px-1 py-1.5 align-top min-w-[64px] text-center">
+        <div className="relative inline-flex flex-col items-center gap-1">
+          <button
+            ref={custoIconRef}
+            type="button"
+            onClick={alternarPopoverCusto}
+            title="Frete, outros custos e notas internas (uso interno, nunca aparece pro cliente)"
+            className={
+              "w-7 h-7 rounded-md text-[12px] leading-none border " +
+              (item.frete > 0 || item.outrosCustos > 0 || item.notasInternas
+                ? "bg-amarelo/15 border-amarelo text-amarelo font-bold"
+                : "border-[#d3dbe6] text-slate-400")
+            }
+          >
+            $
+          </button>
+          <div className="text-[10px] font-bold text-[#1b2a41] whitespace-nowrap">
+            {formatMoney((item.frete || 0) + (item.outrosCustos || 0))}
+          </div>
 
-            {custoAberto &&
-              custoPopoverPos &&
-              createPortal(
-                <div
-                  className="fixed z-50 w-60 bg-white border border-slate-200 rounded-xl shadow-[0_12px_34px_rgba(15,32,64,.25)] p-3 text-left normal-case"
-                  style={{ top: custoPopoverPos.top, left: custoPopoverPos.left }}
-                  onMouseEnter={() => {}}
-                  onMouseLeave={fecharCustoPopover}
-                >
-                  <label className="text-[11px] font-extrabold text-slate-500 block mb-1">
-                    Outros custos (R$)
-                  </label>
-                  <CampoNumero
-                    value={item.outrosCustos || 0}
-                    onChange={(v) => set("outrosCustos", v)}
-                    className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-semibold focus:outline-none focus:border-azul mb-2.5"
-                  />
-                  <label className="text-[11px] font-extrabold text-slate-500 block mb-1">
-                    Notas internas — nunca aparece pro cliente
-                  </label>
-                  <textarea
-                    value={item.notasInternas || ""}
-                    onChange={(e) => set("notasInternas", e.target.value)}
-                    rows={3}
-                    placeholder="Ex: placa de peça R$120, bancagem R$80..."
-                    className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-azul resize-none"
-                  />
-                </div>,
-                document.body
-              )}
-          </div>
+          {custoAberto &&
+            custoPopoverPos &&
+            createPortal(
+              <div
+                ref={custoPopoverRef}
+                className="fixed z-50 w-60 bg-white border border-slate-200 rounded-xl shadow-[0_12px_34px_rgba(15,32,64,.25)] p-3 text-left normal-case"
+                style={{ top: custoPopoverPos.top, left: custoPopoverPos.left }}
+              >
+                <label className="text-[11px] font-extrabold text-slate-500 block mb-1">Frete (R$)</label>
+                <CampoNumero
+                  value={item.frete || 0}
+                  onChange={(v) => set("frete", v)}
+                  className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-semibold focus:outline-none focus:border-azul mb-2.5"
+                />
+                <label className="text-[11px] font-extrabold text-slate-500 block mb-1">Outros custos (R$)</label>
+                <CampoNumero
+                  value={item.outrosCustos || 0}
+                  onChange={(v) => set("outrosCustos", v)}
+                  className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-semibold focus:outline-none focus:border-azul mb-2.5"
+                />
+                <label className="text-[11px] font-extrabold text-slate-500 block mb-1">
+                  Notas internas — nunca aparece pro cliente
+                </label>
+                <textarea
+                  value={item.notasInternas || ""}
+                  onChange={(e) => set("notasInternas", e.target.value)}
+                  rows={3}
+                  placeholder="Ex: placa de peça R$120, bancagem R$80..."
+                  className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-azul resize-none"
+                />
+              </div>,
+              document.body
+            )}
         </div>
-        {item.outrosCustos > 0 && (
-          <div className="text-[10px] text-slate-400 mt-0.5 text-center whitespace-nowrap">
-            +{formatMoney(item.outrosCustos)}
-          </div>
-        )}
       </td>
       <td className="px-1 py-1.5 align-top min-w-[56px]">
         <input

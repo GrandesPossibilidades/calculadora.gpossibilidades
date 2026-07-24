@@ -41,11 +41,11 @@ export default function ItemCardMobile({
     setPrecoUnitarioDesejado,
     setPrecoTotalDesejado,
     iconRef,
+    popoverRef,
     refAberta,
     popoverPos,
-    abrirPopover,
-    fecharPopover,
-    alternarPin,
+    alternarPopoverRef,
+    fecharPopoverRef,
   } = useItemRow({ item, onChange, fornecedores, aoCadastrarFornecedor });
 
   return (
@@ -148,7 +148,7 @@ export default function ItemCardMobile({
             <button
               ref={iconRef}
               type="button"
-              onClick={alternarPin}
+              onClick={alternarPopoverRef}
               className={
                 "border-[1.5px] rounded-[10px] px-3.5 py-2.5 text-[13px] font-extrabold " +
                 (referencias.length > 0
@@ -163,8 +163,9 @@ export default function ItemCardMobile({
               popoverPos &&
               createPortal(
                 <>
-                  <div className="fixed inset-0 z-[49]" onClick={fecharPopover} />
+                  <div className="fixed inset-0 z-[49]" onClick={fecharPopoverRef} />
                   <div
+                    ref={popoverRef}
                     className="fixed z-50 w-64 bg-white border border-slate-200 rounded-xl shadow-[0_12px_34px_rgba(15,32,64,.25)] p-3 text-left normal-case"
                     style={{
                       top: popoverPos.top,
