@@ -4,7 +4,7 @@ import CampoNumero from "@/components/CampoNumero";
 import useItemRow, { OUTROS } from "@/lib/useItemRow";
 
 const campo =
-  "w-full border border-[#d3dbe6] rounded-[7px] px-2 py-1.5 text-[13px] font-semibold text-[#1b2a41] focus:outline-none focus:border-azul";
+  "w-full border border-[#d3dbe6] rounded-[7px] px-2.5 py-2 text-sm font-semibold text-[#1b2a41] focus:outline-none focus:border-azul";
 
 function selecionarTudo(e) {
   e.target.select();
@@ -59,7 +59,7 @@ export default function ItemRow({
 
   return (
     <tr className="bg-[#fbfcfe] shadow-[0_1px_2px_rgba(15,32,64,.04)] align-middle text-xs">
-      <td className="text-left px-2 py-1.5 min-w-[150px] rounded-l-lg align-top">
+      <td className="text-left px-2 py-1.5 min-w-[220px] rounded-l-lg align-top">
         <textarea
           rows={1}
           value={item.nome}
@@ -71,7 +71,7 @@ export default function ItemRow({
           className={campo + " min-w-[120px] resize-none leading-snug"}
         />
       </td>
-      <td className="px-1 py-1.5 min-w-[64px] align-top">
+      <td className="px-1 py-1.5 min-w-[150px] align-top">
         <div className="flex items-center gap-1">
           <select
             value={outrosAtivo ? OUTROS : item.fornecedor || ""}
@@ -173,7 +173,7 @@ export default function ItemRow({
           />
         )}
       </td>
-      <td className="px-1 py-1.5 align-top min-w-[52px]">
+      <td className="px-1 py-1.5 align-top min-w-[76px]">
         <input
           type="number"
           step="1"
@@ -183,7 +183,7 @@ export default function ItemRow({
           className={campo + " text-center"}
         />
       </td>
-      <td className="px-1 py-1.5 align-top min-w-[70px]">
+      <td className="px-1 py-1.5 align-top min-w-[100px]">
         <input
           type="number"
           step="0.5"
@@ -192,11 +192,11 @@ export default function ItemRow({
           onChange={(e) => set("custoUnit", e.target.value)}
           className={campo + " text-center"}
         />
-        <div className="text-[10px] text-slate-400 mt-0.5 text-center whitespace-nowrap">
+        <div className="text-[11px] text-slate-400 mt-0.5 text-center whitespace-nowrap">
           {formatMoney(r.custoTotal)}
         </div>
       </td>
-      <td className="px-1 py-1.5 align-top min-w-[100px]">
+      <td className="px-1 py-1.5 align-top min-w-[140px]">
         <div className="relative">
           <button
             ref={custoIconRef}
@@ -270,7 +270,7 @@ export default function ItemRow({
             )}
         </div>
       </td>
-      <td className="px-1 py-1.5 align-top min-w-[56px]">
+      <td className="px-1 py-1.5 align-top min-w-[84px]">
         <input
           type="number"
           step="1"
@@ -281,7 +281,7 @@ export default function ItemRow({
         />
         <div
           className={
-            "text-[10px] mt-0.5 text-center whitespace-nowrap font-bold " +
+            "text-[11px] mt-0.5 text-center whitespace-nowrap font-bold " +
             (comissaoBaixa ? "text-vermelho" : "text-[#1b2a41]")
           }
         >
@@ -289,7 +289,7 @@ export default function ItemRow({
           {comissaoBaixa && " (< 150)"}
         </div>
       </td>
-      <td className="px-1 py-1.5 align-top min-w-[56px]">
+      <td className="px-1 py-1.5 align-top min-w-[84px]">
         <input
           type="number"
           step="1"
@@ -298,11 +298,11 @@ export default function ItemRow({
           onChange={(e) => set("impostoPct", e.target.value)}
           className={campo + " text-center"}
         />
-        <div className="text-[10px] text-slate-400 mt-0.5 text-center whitespace-nowrap">
+        <div className="text-[11px] text-slate-400 mt-0.5 text-center whitespace-nowrap">
           {formatMoney(r.impostoValor)}
         </div>
       </td>
-      <td className="px-1 py-1.5 align-top min-w-[84px]">
+      <td className="px-1 py-1.5 align-top min-w-[120px]">
         <CampoNumero
           value={Math.round(r.precoUnitario * 10000) / 10000}
           casasDecimais={4}
@@ -311,7 +311,7 @@ export default function ItemRow({
           className={campo + " text-center"}
         />
       </td>
-      <td className="px-1 py-1.5 align-top min-w-[104px]">
+      <td className="px-1 py-1.5 align-top min-w-[140px]">
         <CampoNumero
           value={Math.round(r.precoVendaTotal * 100) / 100}
           onChange={setPrecoTotalDesejado}
@@ -319,7 +319,7 @@ export default function ItemRow({
           className={campo + " text-center font-bold text-azul"}
         />
       </td>
-      <td className="px-1.5 py-1.5 text-center align-top min-w-[90px]">
+      <td className="px-1.5 py-1.5 text-center align-top min-w-[130px]">
         <div className="rounded-lg px-2 py-1.5 text-center" style={{ background: cor.bg, border: `1px solid ${cor.bd}` }}>
           <CampoNumero
             value={Math.round(r.margem * 100) / 100}

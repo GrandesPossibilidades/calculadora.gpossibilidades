@@ -302,7 +302,7 @@ export default function OrcamentoForm({ inicial }) {
   }
 
   return (
-    <div className="max-w-[1040px] mx-auto px-3 py-3.5 pb-24 md:px-5 md:py-[22px] md:pb-10 flex flex-col gap-3.5">
+    <div className="max-w-[1600px] mx-auto px-3 py-3.5 pb-24 md:px-6 md:py-[22px] md:pb-10 flex flex-col gap-3.5">
       {isEdit && (
         <div
           className="flex flex-wrap items-center justify-between gap-2.5 rounded-2xl px-4 py-3 border shadow-[0_1px_2px_rgba(15,32,64,.05)]"
