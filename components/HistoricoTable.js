@@ -182,6 +182,20 @@ export default function HistoricoTable({ orcamentos, erro }) {
     }
   }
 
+  async function excluir(o) {
+    const confirmado = window.confirm(
+      `Excluir o orçamento nº ${o.numero} — ${o.cliente || "(sem nome)"}?\n\nEssa ação não pode ser desfeita.`
+    );
+    if (!confirmado) return;
+
+    setCarregandoId(o.id);
+    const { error } = await supabase.from("orcamentos").delete().eq("id", o.id);
+    setCarregandoId(null);
+    setMenuAberto(null);
+
+    if (!error) router.refresh();
+  }
+
   return (
     <div className="bg-white rounded-2xl shadow-[0_1px_2px_rgba(15,32,64,.05)] border border-[#e3e9f2] p-4">
       <h2 className="text-[11px] font-extrabold uppercase tracking-wide text-azul border-b-2 border-slate-100 pb-2 mb-3">
@@ -295,6 +309,14 @@ export default function HistoricoTable({ orcamentos, erro }) {
                         className="w-full text-left px-3 py-2 hover:bg-slate-50 disabled:opacity-50"
                       >
                         {carregando ? "Duplicando..." : "Duplicar orçamento"}
+                      </button>
+                      <div className="border-t border-slate-100 my-1" />
+                      <button
+                        onClick={() => excluir(o)}
+                        disabled={carregando}
+                        className="w-full text-left px-3 py-2 text-vermelho hover:bg-red-50 disabled:opacity-50"
+                      >
+                        {carregando ? "Excluindo..." : "Excluir orçamento"}
                       </button>
                     </div>
                   )}
