@@ -189,6 +189,7 @@ export default function OrcamentoForm({ inicial }) {
     if (numeroInt) dadosOrcamento.numero = numeroInt;
 
     let orcamentoId = inicial?.id;
+    let idsItensAntigos = [];
 
     if (isEdit) {
       const { error: errUpdate } = await supabase
@@ -202,12 +203,23 @@ export default function OrcamentoForm({ inicial }) {
         return;
       }
 
-      const { error: errDel } = await supabase.from("orcamento_itens").delete().eq("orcamento_id", orcamentoId);
-      if (errDel) {
-        setErro(errDel.message);
+      // Guarda quais itens já existem antes de mexer em qualquer coisa. Só
+      // apaga essas linhas específicas DEPOIS que os itens novos já tiverem
+      // sido gravados com sucesso — assim, se a gravação dos novos falhar no
+      // meio do caminho (internet caiu, etc.), os itens antigos continuam
+      // intactos em vez de já terem sido apagados à toa.
+      const { data: itensAntigos, error: errBuscarAntigos } = await supabase
+        .from("orcamento_itens")
+        .select("id")
+        .eq("orcamento_id", orcamentoId);
+
+      if (errBuscarAntigos) {
+        setErro(errBuscarAntigos.message);
         setSalvando(false);
         return;
       }
+
+      idsItensAntigos = (itensAntigos || []).map((it) => it.id);
     } else {
       const { data: orc, error: errOrc } = await supabase
         .from("orcamentos")
@@ -248,12 +260,20 @@ export default function OrcamentoForm({ inicial }) {
 
     const { error: errItens } = await supabase.from("orcamento_itens").insert(itensPayload);
 
-    setSalvando(false);
-
     if (errItens) {
+      setSalvando(false);
       setErro(errItens.message);
       return;
     }
+
+    // Só apaga as linhas antigas agora que as novas já estão gravadas de
+    // verdade. Se isso falhar, os itens novos continuam salvos — só sobra
+    // lixo antigo duplicado, nunca perda de dado.
+    if (idsItensAntigos.length) {
+      await supabase.from("orcamento_itens").delete().in("id", idsItensAntigos);
+    }
+
+    setSalvando(false);
 
     if (isEdit) {
       setSalvo(true);
