@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { computeItem, computeTotals, COMISSAO_MINIMA } from "@/lib/calc";
+import { computeItem, computeTotals, itensIncluidos, COMISSAO_MINIMA } from "@/lib/calc";
 import { formatMoney } from "@/lib/format";
 import { EMPRESAS, EMPRESA_PADRAO } from "@/lib/empresas";
 import { FORNECEDORES_PADRAO } from "@/lib/fornecedores";
@@ -20,6 +20,7 @@ const novoItem = (comissaoPct, impostoPct) => ({
   custoUnit: 0,
   quantidade: 1,
   outrosCustosItens: [],
+  incluido: true,
   comissaoPct,
   impostoPct,
 });
@@ -81,9 +82,10 @@ export default function OrcamentoForm({ inicial }) {
 
   const totals = useMemo(() => computeTotals(itens), [itens]);
   const itensComissaoBaixa = useMemo(
-    () => itens.filter((it) => computeItem(it).comissaoValor < COMISSAO_MINIMA && it.nome),
+    () => itensIncluidos(itens).filter((it) => computeItem(it).comissaoValor < COMISSAO_MINIMA && it.nome),
     [itens]
   );
+  const qtdIncluidos = itensIncluidos(itens).length;
 
   function addItem() {
     const novo = novoItem(defComissao, defImposto);
@@ -250,6 +252,7 @@ export default function OrcamentoForm({ inicial }) {
         outros_custos: r.outrosCustos,
         notas_internas: null,
         outros_custos_itens: it.outrosCustosItens || [],
+        incluido: it.incluido !== false,
         comissao_pct: it.comissaoPct,
         imposto_pct: it.impostoPct,
         preco_unit: r.precoUnitario,
@@ -440,7 +443,7 @@ export default function OrcamentoForm({ inicial }) {
       <section className="bg-white rounded-2xl shadow-[0_1px_2px_rgba(15,32,64,.05)] border border-[#e3e9f2] p-4">
         <div className="flex items-center justify-between gap-2.5 border-b-2 border-slate-100 pb-2 mb-3">
           <h2 className="text-[11px] font-extrabold uppercase tracking-wide text-azul">Itens do orçamento</h2>
-          <span className="text-xs font-bold text-slate-400">{itens.length} itens</span>
+          <span className="text-xs font-bold text-slate-400">{qtdIncluidos === itens.length ? `${itens.length} itens` : `${qtdIncluidos} de ${itens.length} itens no orçamento`}</span>
         </div>
 
         <div className="bg-[#f4f7fc] border border-[#e3e9f2] rounded-xl p-3 mb-3.5 flex flex-wrap items-center gap-3">

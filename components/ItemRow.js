@@ -57,20 +57,36 @@ export default function ItemRow({
     custoPopoverPos,
     alternarPopoverCusto,
   } = useItemRow({ item, onChange, fornecedores, aoCadastrarFornecedor });
+  const incluido = item.incluido !== false;
 
   return (
-    <tr className="bg-[#fbfcfe] shadow-[0_1px_2px_rgba(15,32,64,.04)] align-middle text-xs">
+    <tr
+      className={
+        "bg-[#fbfcfe] shadow-[0_1px_2px_rgba(15,32,64,.04)] align-middle text-xs " +
+        (incluido ? "" : "opacity-50")
+      }
+    >
       <td className="text-left px-2 py-1.5 min-w-[220px] rounded-l-lg align-top">
-        <textarea
-          rows={1}
-          value={item.nome}
-          placeholder="Descrição"
-          onChange={(e) => {
-            set("nome", e.target.value);
-            autoAltura(e);
-          }}
-          className={campo + " min-w-[120px] resize-none leading-snug"}
-        />
+        <div className="flex items-start gap-2">
+          <input
+            type="checkbox"
+            checked={incluido}
+            onChange={(e) => onChange({ ...item, incluido: e.target.checked })}
+            title={incluido ? "No orçamento — desmarque pra tirar (o item fica guardado)" : "Fora do orçamento — marque pra incluir de volta"}
+            aria-label="Incluir este item no orçamento"
+            className="mt-2.5 h-4 w-4 shrink-0 accent-[#1b3a6b] cursor-pointer"
+          />
+          <textarea
+            rows={1}
+            value={item.nome}
+            placeholder="Descrição"
+            onChange={(e) => {
+              set("nome", e.target.value);
+              autoAltura(e);
+            }}
+            className={campo + " min-w-[120px] resize-none leading-snug"}
+          />
+        </div>
       </td>
       <td className="px-1 py-1.5 min-w-[150px] align-top">
         <div className="flex items-center gap-1">

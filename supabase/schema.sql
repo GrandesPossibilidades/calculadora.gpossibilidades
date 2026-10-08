@@ -39,6 +39,9 @@ create table if not exists public.orcamento_itens (
   -- valor próprios, e a soma alimenta a cascata. As colunas antigas continuam
   -- existindo só pra não perder dado histórico de orçamentos já salvos.
   outros_custos_itens jsonb not null default '[]'::jsonb,
+  -- false = item guardado só como referência, fora do orçamento (não entra nos
+  -- totais nem nos PDFs). Padrão: tudo incluído.
+  incluido boolean not null default true,
   comissao_pct numeric not null default 0,
   imposto_pct numeric not null default 15,
   preco_unit numeric not null default 0,

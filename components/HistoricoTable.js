@@ -166,6 +166,7 @@ export default function HistoricoTable({ orcamentos, erro }) {
           outros_custos: r.outrosCustos,
           notas_internas: null,
           outros_custos_itens: it.outrosCustosItens || [],
+          incluido: it.incluido !== false,
           comissao_pct: it.comissaoPct,
           imposto_pct: it.impostoPct,
           preco_unit: r.precoUnitario,

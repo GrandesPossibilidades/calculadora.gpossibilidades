@@ -1,5 +1,5 @@
 import { Document, Page, Text, View, StyleSheet, Link } from "@react-pdf/renderer";
-import { computeItem, computeTotals, margemCor } from "@/lib/calc";
+import { computeItem, computeTotals, itensIncluidos, margemCor } from "@/lib/calc";
 import { formatMoney, formatMoneyPreciso, formatPct, isUrl, urlHref } from "@/lib/format";
 
 const styles = StyleSheet.create({
@@ -68,6 +68,8 @@ export default function OrcamentoPDF({
   criadoPor,
   data,
 }) {
+  // Item desmarcado no orçamento fica só guardado como referência: não sai no PDF.
+  itens = itensIncluidos(itens);
   const t = totals || computeTotals(itens);
   const dataStr = (data ? new Date(data) : new Date()).toLocaleDateString("pt-BR");
   const fornecedorMode = modo === "fornecedor";

@@ -53,15 +53,30 @@ export default function ItemCardMobile({
     fecharPopoverRef,
   } = useItemRow({ item, onChange, fornecedores, aoCadastrarFornecedor });
 
+  const incluido = item.incluido !== false;
+
   return (
     <div
-      className="bg-white rounded-2xl overflow-hidden shadow-[0_1px_2px_rgba(15,32,64,.05)] border border-[#e3e9f2]"
+      className={
+        "bg-white rounded-2xl overflow-hidden shadow-[0_1px_2px_rgba(15,32,64,.05)] border border-[#e3e9f2] " +
+        (incluido ? "" : "opacity-55")
+      }
       style={{ borderLeft: `5px solid ${cor.solid}` }}
     >
+      <div className="flex items-center">
+        <label className="pl-3.5 py-3.5 pr-1 shrink-0 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={incluido}
+            onChange={(e) => onChange({ ...item, incluido: e.target.checked })}
+            aria-label="Incluir este item no orçamento"
+            className="h-5 w-5 accent-[#1b3a6b] cursor-pointer"
+          />
+        </label>
       <button
         type="button"
         onClick={onToggleExpand}
-        className="w-full flex items-center justify-between gap-2.5 px-3.5 py-3.5 text-left"
+        className="flex-1 min-w-0 flex items-center justify-between gap-2.5 pl-2.5 pr-3.5 py-3.5 text-left"
       >
         <span className="text-[15px] font-extrabold text-[#1b2a41] truncate">{nomeExibido}</span>
         <span className="flex items-center gap-2.5 shrink-0">
@@ -81,6 +96,7 @@ export default function ItemCardMobile({
           </span>
         </span>
       </button>
+      </div>
 
       <div className="grid grid-cols-4 gap-px bg-[#eef2f7] border-t border-[#eef2f7]">
         <div className="bg-[#fbfcfe] py-2 px-1.5 text-center">
