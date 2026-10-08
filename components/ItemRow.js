@@ -39,6 +39,7 @@ export default function ItemRow({
     adicionarReferencia,
     removerReferencia,
     setMargemDesejada,
+    setCustoTotalDesejado,
     setPrecoUnitarioDesejado,
     setPrecoTotalDesejado,
     iconRef,
@@ -192,9 +193,12 @@ export default function ItemRow({
           onChange={(e) => set("custoUnit", e.target.value)}
           className={campo + " text-center"}
         />
-        <div className="text-[11px] text-slate-400 mt-0.5 text-center whitespace-nowrap">
-          {formatMoney(r.custoTotal)}
-        </div>
+        <CampoNumero
+          value={Math.round(r.custoTotal * 100) / 100}
+          onChange={setCustoTotalDesejado}
+          title="Custo total do item — pode digitar aqui o total do fornecedor que o custo unitário é recalculado"
+          className="w-full mt-0.5 border border-[#e3e9f2] rounded-[5px] px-1 py-0.5 text-[11px] text-slate-500 text-center focus:outline-none focus:border-azul focus:text-[#1b2a41]"
+        />
       </td>
       <td className="px-1 py-1.5 align-top min-w-[140px]">
         <div className="relative">

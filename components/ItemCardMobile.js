@@ -38,6 +38,7 @@ export default function ItemCardMobile({
     setNovaRef,
     adicionarReferencia,
     removerReferencia,
+    setCustoTotalDesejado,
     setPrecoUnitarioDesejado,
     setPrecoTotalDesejado,
     outrosCustosItens,
@@ -248,6 +249,14 @@ export default function ItemCardMobile({
                 value={item.custoUnit}
                 onFocus={(e) => e.target.select()}
                 onChange={(e) => set("custoUnit", e.target.value)}
+                className={campo + " text-center"}
+              />
+            </label>
+            <label className={rotulo + " col-span-2"}>
+              Custo total (R$) — digite o total e o unitário se ajusta
+              <CampoNumero
+                value={Math.round(r.custoTotal * 100) / 100}
+                onChange={setCustoTotalDesejado}
                 className={campo + " text-center"}
               />
             </label>
